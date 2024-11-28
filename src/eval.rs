@@ -337,11 +337,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Not" => {
-                let xs = get(&node.input[0])?;
-                let xs = xs.eq(&xs.zeros_like()?)?;
-                values.insert(node.output[0].clone(), xs);
-            }
             "MatMul" => {
                 let input0 = get(&node.input[0])?;
                 let input1 = get(&node.input[1])?;

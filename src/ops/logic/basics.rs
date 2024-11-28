@@ -13,3 +13,15 @@ impl OnnxOp for Xor {
         Ok((output_name.clone(), out))
     }
 }
+
+pub(crate) struct Not;
+
+impl OnnxOp for Not {
+    // https://onnx.ai/onnx/operators/onnx__Not.html
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        let xs = node.get_input(0)?;
+        let out = xs.eq(&xs.zeros_like()?)?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), out))
+    }
+}
