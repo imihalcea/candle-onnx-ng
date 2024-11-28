@@ -1939,16 +1939,6 @@ fn simple_eval_(
                     );
                 }
             }
-            // https://onnx.ai/onnx/operators/onnx__Xor.html
-            "Xor" => {
-                // Since we don't have a `DType::Bool` yet, this ensures that we are working with `0`(False) & `1`(True)
-                let a = get(&node.input[0])?.gt(0_u8)?;
-                let b = get(&node.input[1])?.gt(0_u8)?;
-
-                let out = a.broadcast_add(&b)?.eq(1_u8)?;
-
-                values.insert(node.output[0].clone(), out);
-            }
             op_type => {
                 let onnx_op = registry.get(op_type)?;
                 let cn = ComputeNode::new(&node, values);

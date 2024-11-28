@@ -1,5 +1,4 @@
 use crate::ops::compute_node::ComputeNode;
-use crate::ops::OnnxOpError::ComputationFailed;
 use crate::ops::{OnnxOp, OnnxOpError, OpOutput};
 
 pub(crate) struct Sign;
