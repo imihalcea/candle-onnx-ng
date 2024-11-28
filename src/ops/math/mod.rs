@@ -1,8 +1,13 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod basics;
 mod cmp;
+mod matmul;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>  {
+    //comparison
+    registry.insert("Equal", Box::new(cmp::Equal))?;
+
+    //basics
     registry.insert("Add", Box::new(basics::Add))?;
     registry.insert("Sub", Box::new(basics::Sub))?;
     registry.insert("Mul", Box::new(basics::Mul))?;
@@ -10,6 +15,10 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Exp", Box::new(basics::Exp))?;
     registry.insert("Pow", Box::new(basics::Pow))?;
     registry.insert("Sign", Box::new(basics::Sign))?;
-    registry.insert("Equal", Box::new(cmp::Equal))?;
+
+
+    //matrix
+    registry.insert("MatMul", Box::new(matmul::MatMul))?;
+
     Ok(())
 }

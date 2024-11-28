@@ -337,12 +337,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "MatMul" => {
-                let input0 = get(&node.input[0])?;
-                let input1 = get(&node.input[1])?;
-                let output = input0.broadcast_matmul(input1)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Reshape" => {
                 let input0 = get(&node.input[0])?;
                 let input1 = get(&node.input[1])?.to_vec1::<i64>()?;
