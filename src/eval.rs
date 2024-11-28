@@ -337,12 +337,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Add" => {
-                let input0 = get(&node.input[0])?;
-                let input1 = get(&node.input[1])?;
-                let output = input0.broadcast_add(input1)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Sub" => {
                 let input0 = get(&node.input[0])?;
                 let input1 = get(&node.input[1])?;
