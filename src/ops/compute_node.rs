@@ -1,6 +1,7 @@
 use crate::onnx::NodeProto;
 use candle_core::Tensor;
 use std::collections::HashMap;
+use crate::ops::OnnxOpError;
 
 //This struct is used to represent a node in the computation graph
 //The idea is not to use the NodeProto directly in the computation graph
@@ -19,12 +20,16 @@ impl<'a> ComputeNode<'a> {
         }
     }
 
-    pub fn get_input(&self, index: usize) -> Option<&Tensor> {
-        let input_name = self.node_proto.input.get(index)?;
+    pub fn get_input(&self, index: usize) -> Result<&Tensor, OnnxOpError> {
+        let input_name = self.node_proto.input.get(index)
+            .ok_or_else(|| OnnxOpError::InvalidInput(format!("input {} not found", index)))?;
+
         self.context.get(input_name)
+            .ok_or_else(|| OnnxOpError::InvalidInput(format!("input {} not found", index)))
     }
 
-    pub fn get_output(&self, index: usize) -> Option<&String> {
+    pub fn get_output(&self, index: usize) -> Result<&String, OnnxOpError> {
         self.node_proto.output.get(index)
+            .ok_or_else(|| OnnxOpError::InvalidOutput(format!("output {} not found", index)))
     }
 }

@@ -9,6 +9,7 @@ pub type OpOutput = (String, candle::Tensor);
 #[derive(Debug, PartialEq, Eq)]
 pub enum OnnxOpError {
     InvalidInput(String),
+    InvalidOutput(String),
     ComputationFailed(String),
     UnsupportedOp(String),
     DuplicateOp(String),
@@ -20,10 +21,18 @@ impl From<OnnxOpError> for candle::Error {
     }
 }
 
+impl From<candle_core::Error> for OnnxOpError {
+    fn from(e: candle_core::Error) -> Self {
+        OnnxOpError::ComputationFailed(format!("{:?}", e))
+    }
+}
+
+
 impl Display for OnnxOpError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             OnnxOpError::InvalidInput(s) => write!(f, "Invalid input: {}", s),
+            OnnxOpError::InvalidOutput(s) => write!(f, "Invalid output: {}", s),
             OnnxOpError::ComputationFailed(s) => write!(f, "Computation failed: {}", s),
             OnnxOpError::UnsupportedOp(s) => write!(f, "Unsupported op: {}", s),
             OnnxOpError::DuplicateOp(s) => write!(f, "Duplicate op: {}", s),

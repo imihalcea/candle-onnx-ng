@@ -1,7 +1,8 @@
 use candle_core::{DType, Device, Result, Tensor};
 use candle_onnx_ng::onnx::{GraphProto, NodeProto, ValueInfoProto};
 use std::collections::HashMap;
-mod utils;
+
+pub mod utils;
 #[test]
 fn test_sign_operation() -> Result<()> {
     let manual_graph = utils::create_model_proto_with_graph(Some(GraphProto {

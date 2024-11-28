@@ -1,8 +1,8 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
-mod sign;
+mod basics;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>  {
-    registry.insert("Sign", Box::new(sign::Sign))?;
+    registry.insert("Xor", Box::new(basics::Xor))?;
     Ok(())
 }

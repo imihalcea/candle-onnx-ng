@@ -5,10 +5,13 @@ pub mod compute_node;
 pub use compute_node::ComputeNode;
 
 mod math;
-use math::sign;
+mod logic;
+
 
 pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     let mut registry = OnnxOpRegistry::new();
-    registry.insert("Sign", Box::new(sign::Sign))?;
+
+    logic::register(&mut registry)?;
+    math::register(&mut registry)?;
     Ok(registry)
 }
