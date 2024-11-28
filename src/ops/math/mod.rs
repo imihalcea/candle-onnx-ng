@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod basics;
+mod cmp;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>  {
     registry.insert("Add", Box::new(basics::Add))?;
@@ -9,5 +10,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Exp", Box::new(basics::Exp))?;
     registry.insert("Pow", Box::new(basics::Pow))?;
     registry.insert("Sign", Box::new(basics::Sign))?;
+    registry.insert("Equal", Box::new(cmp::Equal))?;
     Ok(())
 }

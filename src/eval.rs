@@ -337,12 +337,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Equal" => {
-                let input0 = get(&node.input[0])?;
-                let input1 = get(&node.input[1])?;
-                let output = input0.broadcast_eq(input1)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Not" => {
                 let xs = get(&node.input[0])?;
                 let xs = xs.eq(&xs.zeros_like()?)?;
