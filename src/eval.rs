@@ -337,12 +337,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Div" => {
-                let input0 = get(&node.input[0])?;
-                let input1 = get(&node.input[1])?;
-                let output = input0.broadcast_div(input1)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Pow" => {
                 let input0 = get(&node.input[0])?;
                 let input1 = get(&node.input[1])?;
@@ -355,11 +349,6 @@ fn simple_eval_(
                     let output = input0.broadcast_pow(input1)?;
                     values.insert(node.output[0].clone(), output);
                 }
-            }
-            "Exp" => {
-                let xs = get(&node.input[0])?;
-                let output = xs.exp()?;
-                values.insert(node.output[0].clone(), output);
             }
             "Equal" => {
                 let input0 = get(&node.input[0])?;

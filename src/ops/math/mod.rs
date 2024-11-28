@@ -5,6 +5,7 @@ mod add;
 mod sub;
 mod mul;
 mod div;
+mod exp;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>  {
     registry.insert("Sign", Box::new(sign::Sign))?;
@@ -12,5 +13,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Sub", Box::new(sub::Sub))?;
     registry.insert("Mul", Box::new(mul::Mul))?;
     registry.insert("Div", Box::new(div::Div))?;
+    registry.insert("Exp", Box::new(exp::Exp))?;
     Ok(())
 }
