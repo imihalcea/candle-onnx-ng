@@ -14,6 +14,7 @@ pub enum OnnxOpError {
     UnsupportedOp(String),
     DuplicateOp(String),
     UnsupportedType(String),
+    UnsupportedAttribute(String),
 }
 
 impl From<OnnxOpError> for candle::Error {
@@ -37,6 +38,7 @@ impl Display for OnnxOpError {
             OnnxOpError::UnsupportedOp(s) => write!(f, "Unsupported op: {}", s),
             OnnxOpError::DuplicateOp(s) => write!(f, "Duplicate op: {}", s),
             OnnxOpError::UnsupportedType(s) => write!(f, "Unsupported type: {}", s),
+            OnnxOpError::UnsupportedAttribute(s) => write!(f, "Unsupported attribute: {}", s),
         }
     }
 }

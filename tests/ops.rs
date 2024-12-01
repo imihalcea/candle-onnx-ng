@@ -26,12 +26,6 @@ fn test_evaluation_fails_without_defined_graph() -> Result<()> {
     Ok(())
 }
 
-
-
-
-
-
-
 // "Flatten"
 #[test]
 fn test_flatten_operation() -> Result<()> {

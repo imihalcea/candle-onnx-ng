@@ -50,24 +50,11 @@ impl<'a> ComputeNode<'a> {
         &self,
         name: &str,
     ) -> Result<Option<&T>, OnnxOpError> {
-        match self
-            .node_proto
-            .attribute
-            .iter()
-            .find(|attr| attr.name == name)
-        {
-            None => Ok(None),
-            Some(attr) => {
-                if attr.r#type() != T::TYPE {
-                    let error = OnnxOpError::UnsupportedType(format!(
-                        "unsupported type {:?} for '{name}' attribute in '{}' for {}",
-                        attr.r#type, self.node_proto.op_type, self.node_proto.name
-                    ));
-                    return Err(error);
-                }
-                let val = T::get(attr)?;
-                Ok(Some(val))
-            }
-        }
+        parser::get_attr_opt(&self.node_proto, name).map_err(OnnxOpError::from)
     }
+
+    pub(crate) fn get_attr<T: parser::Attr + ?Sized>(&self, name: &str) -> Result<&T, OnnxOpError> {
+        parser::get_attr(&self.node_proto, name).map_err(OnnxOpError::from)
+    }
+
 }
