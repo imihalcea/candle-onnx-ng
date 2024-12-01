@@ -3,7 +3,7 @@ mod basics;
 mod cmp;
 mod matmul;
 
-pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>  {
+pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     //comparison
     registry.insert("Equal", Box::new(cmp::Equal))?;
 
@@ -15,7 +15,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Exp", Box::new(basics::Exp))?;
     registry.insert("Pow", Box::new(basics::Pow))?;
     registry.insert("Sign", Box::new(basics::Sign))?;
-
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;

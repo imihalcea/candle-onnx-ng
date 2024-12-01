@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use candle_core::{Device, Tensor};
 use candle_onnx_ng::onnx::{GraphProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
+use std::collections::HashMap;
 
 pub mod utils;
 

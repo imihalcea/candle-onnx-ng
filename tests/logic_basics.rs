@@ -1,7 +1,7 @@
 use candle_core::{DType, Device, NdArray, Result, Tensor};
-use std::collections::HashMap;
 use candle_onnx_ng::onnx::{GraphProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
+use std::collections::HashMap;
 
 pub mod utils;
 
@@ -44,7 +44,6 @@ fn test_not_operation() -> Result<()> {
 
     Ok(())
 }
-
 
 // Xor
 #[test]

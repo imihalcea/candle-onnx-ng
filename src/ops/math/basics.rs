@@ -1,6 +1,6 @@
-use candle_core::DType;
 use crate::ops::compute_node::ComputeNode;
 use crate::ops::{OnnxOp, OnnxOpError, OpOutput};
+use candle_core::DType;
 
 pub(crate) struct Add;
 impl OnnxOp for Add {
@@ -53,7 +53,6 @@ impl OnnxOp for Div {
         Ok((output_name.clone(), output))
     }
 }
-
 
 pub(crate) struct Exp;
 impl OnnxOp for Exp {

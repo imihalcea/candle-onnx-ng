@@ -12,4 +12,3 @@ impl OnnxOp for Equal {
         Ok((output_name.clone(), output))
     }
 }
-
