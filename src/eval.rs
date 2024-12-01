@@ -114,69 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "AveragePool" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#AveragePool
-                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
-                let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
-                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
-                match auto_pad {
-                    None | Some("NOTSET") => (),
-                    Some(s) => bail!("unsupported auto_pad {s}"),
-                };
-                if let Some(d) = dilations {
-                    if d.iter().any(|&v| v != 1) {
-                        bail!("AvgPool with dilation != 1, {dilations:?}")
-                    }
-                }
-                if let Some(d) = pads {
-                    if d.iter().any(|&v| v != 0) {
-                        bail!("AvgPool with pads != 0, {pads:?}")
-                    }
-                }
-                let xs = get(&node.input[0])?;
-                let (k1, k2) = match kernel_shape {
-                    [k1, k2] => (*k1 as usize, *k2 as usize),
-                    _ => bail!("only 2d AvgPool is supported, kernel shape {kernel_shape:?}"),
-                };
-                let ys = match strides {
-                    None => xs.avg_pool2d((k1, k2))?,
-                    Some([s1, s2]) => {
-                        xs.avg_pool2d_with_stride((k1, k2), (*s1 as usize, *s2 as usize))?
-                    }
-                    Some(strides) => bail!("only 2d AvgPool is supported, strides {strides:?}"),
-                };
-                values.insert(node.output[0].clone(), ys);
-            }
-            "BatchNormalization" => {
-                let training_mode = parser::get_attr_opt::<i64>(node, "training_mode")?;
-                if training_mode.copied().unwrap_or(0) != 0 {
-                    bail!("training mode is not supported for BatchNorm")
-                }
-                let eps = parser::get_attr_opt::<f32>(node, "epsilon")?
-                    .copied()
-                    .unwrap_or(1e-5);
-                let xs = get(&node.input[0])?;
-                let weight = get(&node.input[1])?;
-                let bias = get(&node.input[2])?;
-                let running_mean = get(&node.input[3])?;
-                let running_var = get(&node.input[4])?;
-                let target_shape: Vec<usize> = xs
-                    .dims()
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, v)| if idx == 1 { *v } else { 1 })
-                    .collect();
-                let target_shape = target_shape.as_slice();
-                let xs = xs
-                    .broadcast_sub(&running_mean.reshape(target_shape)?)?
-                    .broadcast_div(&(running_var.reshape(target_shape)? + eps as f64)?.sqrt()?)?;
-                let weight = weight.reshape(target_shape)?;
-                let bias = bias.reshape(target_shape)?;
-                let xs = xs.broadcast_mul(&weight)?.broadcast_add(&bias)?;
-                values.insert(node.output[0].clone(), xs);
-            }
             "Squeeze" => {
                 let xs = get(&node.input[0])?;
                 let mut axes = if node.input.len() <= 1 {
