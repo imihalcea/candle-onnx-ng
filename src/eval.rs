@@ -114,17 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Softmax" => {
-                let input = get(&node.input[0])?;
-                let output = match parser::get_attr_opt::<i64>(node, "axis")? {
-                    None => candle_nn::ops::softmax_last_dim(input)?,
-                    Some(&axis) => {
-                        let axis = input.normalize_axis(axis)?;
-                        candle_nn::ops::softmax(input, axis)?
-                    }
-                };
-                values.insert(node.output[0].clone(), output);
-            }
             "Transpose" => {
                 let input = get(&node.input[0])?;
                 let output = match parser::get_attr_opt::<[i64]>(node, "perm")? {

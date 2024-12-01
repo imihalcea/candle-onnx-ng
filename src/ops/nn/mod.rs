@@ -1,7 +1,8 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
-mod log_softmax;
+mod softmax;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
-    registry.insert("LogSoftmax", Box::new(log_softmax::LogSoftmax))?;
+    registry.insert("LogSoftmax", Box::new(softmax::LogSoftmax))?;
+    registry.insert("Softmax", Box::new(softmax::Softmax))?;
     Ok(())
 }
