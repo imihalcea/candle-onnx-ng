@@ -1,5 +1,5 @@
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
-use candle_core::Error;
+
 pub(crate) struct Transpose;
 impl OnnxOp for Transpose {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {

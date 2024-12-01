@@ -114,42 +114,7 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "MaxPool" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#MaxPool
-                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
-                let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
-                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
-                match auto_pad {
-                    None | Some("NOTSET") => (),
-                    Some(s) => bail!("unsupported auto_pad {s}"),
-                };
-                if let Some(d) = dilations {
-                    if d.iter().any(|&v| v != 1) {
-                        bail!("MaxPool with dilation != 1, {dilations:?}")
-                    }
-                }
-                if let Some(d) = pads {
-                    if d.iter().any(|&v| v != 0) {
-                        bail!("MaxPool with pads != 0, {pads:?}")
-                    }
-                }
-                let xs = get(&node.input[0])?;
-                let (k1, k2) = match kernel_shape {
-                    [k1, k2] => (*k1 as usize, *k2 as usize),
-                    _ => bail!("only 2d MaxPool is supported, kernel shape {kernel_shape:?}"),
-                };
-                let ys = match strides {
-                    None => xs.max_pool2d((k1, k2))?,
-                    Some([s1, s2]) => {
-                        xs.max_pool2d_with_stride((k1, k2), (*s1 as usize, *s2 as usize))?
-                    }
-                    Some(strides) => bail!("only 2d MaxPool is supported, strides {strides:?}"),
-                };
-                values.insert(node.output[0].clone(), ys);
-            }
-            "AveragePool" => {
+             "AveragePool" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#AveragePool
                 let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
                 let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
@@ -728,18 +693,6 @@ fn simple_eval_(
                     .to_dtype(DType::U32)?
                     .to_vec0::<u32>()?;
                 let output = input.cumsum(axis as usize)?;
-                values.insert(node.output[0].clone(), output);
-            }
-            //  https://github.com/onnx/onnx/blob/main/docs/Operators.md#flatten
-            "Flatten" => {
-                let axis = parser::get_attr_opt::<i64>(node, "axis")?
-                    .copied()
-                    .unwrap_or(1) as usize;
-                let input = get(&node.input[0])?;
-                let first_part: usize = input.shape().dims().iter().take(axis).product();
-                let end_index = input.shape().dims().iter().product::<usize>();
-                let new_shape = (first_part, end_index / first_part);
-                let output = input.reshape(new_shape)?;
                 values.insert(node.output[0].clone(), output);
             }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#identity
