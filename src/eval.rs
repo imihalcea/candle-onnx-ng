@@ -114,11 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Dropout" => {
-                let input = get(&node.input[0])?;
-                // Do not apply dropout at the moment, consider that we're only doing inference.
-                values.insert(node.output[0].clone(), input.clone());
-            }
             "MaxPool" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#MaxPool
                 let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
