@@ -3,7 +3,6 @@ use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
 pub(crate) struct MaxPool;
 impl OnnxOp for MaxPool {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
-        let input = node.get_input(0)?;
         // https://github.com/onnx/onnx/blob/main/docs/Operators.md#MaxPool
         let dilations = node.get_attr_opt::<[i64]>("dilations")?;
         let kernel_shape = node.get_attr::<[i64]>("kernel_shape")?;
