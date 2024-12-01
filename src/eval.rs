@@ -5,232 +5,9 @@ use crate::ops::{registry, ComputeNode};
 use candle_core as candle;
 use candle_core::{bail, DType, Device, Result, Tensor};
 
+use crate::parser;
+use crate::parser::Value;
 use std::collections::{HashMap, HashSet};
-
-pub type Value = Tensor;
-
-pub fn dtype(dt: DataType) -> Option<DType> {
-    match dt {
-        DataType::Uint8 => Some(DType::U8),
-        DataType::Uint32 => Some(DType::U32),
-        DataType::Int64 => Some(DType::I64),
-        DataType::Float16 => Some(DType::F16),
-        DataType::Float => Some(DType::F32),
-        DataType::Double => Some(DType::F64),
-        DataType::Bool => Some(DType::U8),
-        _ => None,
-    }
-}
-
-trait Attr {
-    const TYPE: AttributeType;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self>;
-}
-
-trait AttrOwned: Sized {
-    const TYPE: AttributeType;
-    fn get(attr: &onnx::AttributeProto) -> Result<Self>;
-}
-
-impl Attr for i64 {
-    const TYPE: AttributeType = AttributeType::Int;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self> {
-        Ok(&attr.i)
-    }
-}
-
-impl Attr for f32 {
-    const TYPE: AttributeType = AttributeType::Float;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self> {
-        Ok(&attr.f)
-    }
-}
-
-impl Attr for [i64] {
-    const TYPE: AttributeType = AttributeType::Ints;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self> {
-        Ok(attr.ints.as_slice())
-    }
-}
-
-impl Attr for str {
-    const TYPE: AttributeType = AttributeType::String;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self> {
-        std::str::from_utf8(&attr.s).map_err(candle::Error::wrap)
-    }
-}
-
-impl Attr for GraphProto {
-    const TYPE: AttributeType = AttributeType::Graph;
-    fn get(attr: &onnx::AttributeProto) -> Result<&Self> {
-        attr.g
-            .as_ref()
-            .ok_or_else(|| candle::Error::Msg("attribute does not contain graph".to_string()))
-    }
-}
-
-impl AttrOwned for Vec<String> {
-    const TYPE: AttributeType = AttributeType::Strings;
-    fn get(attr: &onnx::AttributeProto) -> Result<Self> {
-        let mut ret = vec![];
-        for bytes in attr.strings.iter() {
-            let s = String::from_utf8(bytes.clone()).map_err(candle::Error::wrap)?;
-            ret.push(s);
-        }
-        Ok(ret)
-    }
-}
-
-impl AttrOwned for Tensor {
-    const TYPE: AttributeType = AttributeType::Tensor;
-    fn get(attr: &onnx::AttributeProto) -> Result<Self> {
-        let tensor_proto = match &attr.t {
-            Some(value) => value,
-            None => bail!(
-                "attribute {} was of type TENSOR, but no tensor was found",
-                attr.name
-            ),
-        };
-
-        let data_type = match DataType::try_from(tensor_proto.data_type) {
-            Ok(value) => value,
-            Err(_) => bail!(
-                "attribute {} of type TENSOR was an invalid data_type number {}",
-                attr.name,
-                tensor_proto.data_type
-            ),
-        };
-
-        let dtype = match dtype(data_type) {
-            Some(value) => value,
-            None => bail!(
-                "attribute {} of type TENSOR has an unsupported data_type {}",
-                attr.name,
-                data_type.as_str_name()
-            ),
-        };
-
-        let mut dims = Vec::with_capacity(tensor_proto.dims.len());
-        for dim in &tensor_proto.dims {
-            if dim < &0 {
-                bail!(
-                    "attribute {} of type TENSOR has a negative dimension, which is unsupported",
-                    attr.name
-                )
-            }
-            dims.push(*dim as usize)
-        }
-
-        Tensor::from_raw_buffer(&tensor_proto.raw_data, dtype, &dims, &Device::Cpu)
-    }
-}
-
-fn get_attr_<'a>(node: &'a onnx::NodeProto, name: &str) -> Result<&'a onnx::AttributeProto> {
-    match node.attribute.iter().find(|attr| attr.name == name) {
-        None => {
-            bail!(
-                "cannot find the '{name}' attribute in '{}' for {}",
-                node.op_type,
-                node.name
-            )
-        }
-        Some(dt) => Ok(dt),
-    }
-}
-
-fn get_attr<'a, T: Attr + ?Sized>(node: &'a onnx::NodeProto, name: &str) -> Result<&'a T> {
-    let attr = get_attr_(node, name)?;
-    if attr.r#type() != T::TYPE {
-        bail!(
-            "unsupported type {:?} for '{name}' attribute in '{}' for {}",
-            attr.r#type,
-            node.op_type,
-            node.name
-        )
-    }
-    T::get(attr)
-}
-
-fn get_attr_opt<'a, T: Attr + ?Sized>(
-    node: &'a onnx::NodeProto,
-    name: &str,
-) -> Result<Option<&'a T>> {
-    match node.attribute.iter().find(|attr| attr.name == name) {
-        None => Ok(None),
-        Some(attr) => {
-            if attr.r#type() != T::TYPE {
-                bail!(
-                    "unsupported type {:?} for '{name}' attribute in '{}' for {}",
-                    attr.r#type,
-                    node.op_type,
-                    node.name
-                )
-            }
-            let val = T::get(attr)?;
-            Ok(Some(val))
-        }
-    }
-}
-
-fn get_attr_opt_owned<T: AttrOwned>(node: &onnx::NodeProto, name: &str) -> Result<Option<T>> {
-    match node.attribute.iter().find(|attr| attr.name == name) {
-        None => Ok(None),
-        Some(attr) => {
-            if attr.r#type() != T::TYPE {
-                bail!(
-                    "unsupported type {:?} for '{name}' attribute in '{}' for {}",
-                    attr.r#type,
-                    node.op_type,
-                    node.name
-                )
-            }
-            let val = T::get(attr)?;
-            Ok(Some(val))
-        }
-    }
-}
-
-pub fn get_tensor(t: &onnx::TensorProto, name: &str) -> Result<Tensor> {
-    let dims: Vec<usize> = t.dims.iter().map(|&x| x as usize).collect();
-    match DataType::try_from(t.data_type) {
-        Ok(DataType::Int32) => {
-            if t.int32_data.is_empty() {
-                let len = t.raw_data.len() / 4;
-                let data: &[i32] =
-                    unsafe { std::slice::from_raw_parts(t.raw_data.as_ptr() as *const i32, len) };
-                let data = data.iter().map(|v| *v as i64).collect::<Vec<_>>();
-                Tensor::from_vec(data, len, &Device::Cpu)
-            } else {
-                let data = t.int32_data.iter().map(|v| *v as i64).collect::<Vec<_>>();
-                Tensor::from_vec(data, t.int32_data.len(), &Device::Cpu)
-            }
-        }
-        Ok(dt) => match dtype(dt) {
-            Some(dt) => {
-                if dt == DType::F32 && !t.float_data.is_empty() {
-                    Tensor::from_slice(&t.float_data, dims.as_slice(), &Device::Cpu)
-                } else if dt == DType::F64 && !t.double_data.is_empty() {
-                    Tensor::from_slice(&t.double_data, dims.as_slice(), &Device::Cpu)
-                } else if dt == DType::I64 && !t.int64_data.is_empty() {
-                    Tensor::from_slice(&t.int64_data, dims.as_slice(), &Device::Cpu)
-                } else {
-                    Tensor::from_raw_buffer(
-                        t.raw_data.as_slice(),
-                        dt,
-                        dims.as_slice(),
-                        &Device::Cpu,
-                    )
-                }
-            }
-            None => {
-                bail!("unsupported 'value' data-type {dt:?} for {name}")
-            }
-        },
-        Err(_) => {
-            bail!("unsupported 'value' data-type {} for {name}", t.data_type,)
-        }
-    }
-}
 
 // This function provides a direct evaluation of the proto.
 // Longer-term, we should first convert the proto to an intermediate representation of the compute
@@ -253,7 +30,7 @@ fn simple_eval_(
     values: &mut HashMap<String, Value>,
 ) -> Result<HashMap<String, Value>> {
     for t in graph.initializer.iter() {
-        let tensor = get_tensor(t, t.name.as_str())?;
+        let tensor = parser::get_tensor(t, t.name.as_str())?;
         values.insert(t.name.to_string(), tensor);
     }
     for input in graph.input.iter() {
@@ -275,7 +52,7 @@ fn simple_eval_(
             Some(tensor) => tensor,
         };
         let dt = match DataType::try_from(tensor_type.elem_type) {
-            Ok(dt) => match dtype(dt) {
+            Ok(dt) => match parser::dtype(dt) {
                 Some(dt) => dt,
                 None => {
                     bail!("unsupported 'value' data-type {dt:?} for {}", input.name)
@@ -337,20 +114,9 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "LogSoftmax" => {
-                let input = get(&node.input[0])?;
-                let output = match get_attr_opt::<i64>(node, "axis")? {
-                    None => candle_nn::ops::softmax_last_dim(input)?,
-                    Some(&axis) => {
-                        let axis = input.normalize_axis(axis)?;
-                        candle_nn::ops::log_softmax(input, axis)?
-                    }
-                };
-                values.insert(node.output[0].clone(), output);
-            }
             "Softmax" => {
                 let input = get(&node.input[0])?;
-                let output = match get_attr_opt::<i64>(node, "axis")? {
+                let output = match parser::get_attr_opt::<i64>(node, "axis")? {
                     None => candle_nn::ops::softmax_last_dim(input)?,
                     Some(&axis) => {
                         let axis = input.normalize_axis(axis)?;
@@ -361,7 +127,7 @@ fn simple_eval_(
             }
             "Transpose" => {
                 let input = get(&node.input[0])?;
-                let output = match get_attr_opt::<[i64]>(node, "perm")? {
+                let output = match parser::get_attr_opt::<[i64]>(node, "perm")? {
                     None => input.t()?,
                     Some(perm) => {
                         let perm = perm.iter().map(|&v| v as usize).collect::<Vec<_>>();
@@ -377,11 +143,11 @@ fn simple_eval_(
             }
             "MaxPool" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#MaxPool
-                let dilations = get_attr_opt::<[i64]>(node, "dilations")?;
-                let kernel_shape = get_attr::<[i64]>(node, "kernel_shape")?;
-                let pads = get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = get_attr_opt::<str>(node, "auto_pad")?;
+                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
+                let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
+                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
+                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
+                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
                 match auto_pad {
                     None | Some("NOTSET") => (),
                     Some(s) => bail!("unsupported auto_pad {s}"),
@@ -412,11 +178,11 @@ fn simple_eval_(
             }
             "AveragePool" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#AveragePool
-                let dilations = get_attr_opt::<[i64]>(node, "dilations")?;
-                let kernel_shape = get_attr::<[i64]>(node, "kernel_shape")?;
-                let pads = get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = get_attr_opt::<str>(node, "auto_pad")?;
+                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
+                let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
+                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
+                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
+                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
                 match auto_pad {
                     None | Some("NOTSET") => (),
                     Some(s) => bail!("unsupported auto_pad {s}"),
@@ -446,11 +212,11 @@ fn simple_eval_(
                 values.insert(node.output[0].clone(), ys);
             }
             "BatchNormalization" => {
-                let training_mode = get_attr_opt::<i64>(node, "training_mode")?;
+                let training_mode = parser::get_attr_opt::<i64>(node, "training_mode")?;
                 if training_mode.copied().unwrap_or(0) != 0 {
                     bail!("training mode is not supported for BatchNorm")
                 }
-                let eps = get_attr_opt::<f32>(node, "epsilon")?
+                let eps = parser::get_attr_opt::<f32>(node, "epsilon")?
                     .copied()
                     .unwrap_or(1e-5);
                 let xs = get(&node.input[0])?;
@@ -499,11 +265,8 @@ fn simple_eval_(
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#ConstantOfShape
             "ConstantOfShape" => {
                 let input = get(&node.input[0])?;
-                let value = get_attr_opt_owned::<Tensor>(node, "value")?.unwrap_or(Tensor::zeros(
-                    (),
-                    DType::F32,
-                    &Device::Cpu,
-                )?);
+                let value = parser::get_attr_opt_owned::<Tensor>(node, "value")?
+                    .unwrap_or(Tensor::zeros((), DType::F32, &Device::Cpu)?);
 
                 let xs = Tensor::ones(input.shape(), value.dtype(), input.device())?
                     .broadcast_mul(&value)?;
@@ -511,7 +274,7 @@ fn simple_eval_(
             }
             "Unsqueeze" => {
                 let xs = get(&node.input[0])?;
-                let axes = match get_attr_opt::<[i64]>(node, "axes")? {
+                let axes = match parser::get_attr_opt::<[i64]>(node, "axes")? {
                     Some(axis) => axis.to_vec(),
                     None => get(&node.input[1])?.to_vec1::<i64>()?,
                 };
@@ -555,7 +318,9 @@ fn simple_eval_(
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Gather
                 let xs = get(&node.input[0])?;
                 let indices = get(&node.input[1])?;
-                let axis = get_attr_opt::<i64>(node, "axis")?.copied().unwrap_or(0);
+                let axis = parser::get_attr_opt::<i64>(node, "axis")?
+                    .copied()
+                    .unwrap_or(0);
                 let axis = xs.normalize_axis(axis)?;
 
                 // index_select does not support negative indices, so normalize them
@@ -609,7 +374,9 @@ fn simple_eval_(
                 }
 
                 let axis = {
-                    let axis_i64 = get_attr_opt::<i64>(node, "axis")?.copied().unwrap_or(0);
+                    let axis_i64 = parser::get_attr_opt::<i64>(node, "axis")?
+                        .copied()
+                        .unwrap_or(0);
                     let axis = data.normalize_axis(axis_i64)?;
 
                     if axis >= rank {
@@ -640,8 +407,12 @@ fn simple_eval_(
             "Shape" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Shape
                 let xs = get(&node.input[0])?;
-                let start = get_attr_opt::<i64>(node, "start")?.copied().unwrap_or(0);
-                let end = get_attr_opt::<i64>(node, "end")?.copied().unwrap_or(-1);
+                let start = parser::get_attr_opt::<i64>(node, "start")?
+                    .copied()
+                    .unwrap_or(0);
+                let end = parser::get_attr_opt::<i64>(node, "end")?
+                    .copied()
+                    .unwrap_or(-1);
                 let start = xs.normalize_axis(start)?;
                 let end = xs.normalize_axis(end)?;
                 let mut dims = vec![];
@@ -743,12 +514,14 @@ fn simple_eval_(
             }
             "Conv" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv
-                let dilations = get_attr_opt::<[i64]>(node, "dilations")?;
-                let groups = get_attr_opt::<i64>(node, "group")?.copied().unwrap_or(1);
-                let _kernel_shape = get_attr_opt::<[i64]>(node, "kernel_shape")?;
-                let pads = get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = get_attr_opt::<str>(node, "auto_pad")?;
+                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
+                let groups = parser::get_attr_opt::<i64>(node, "group")?
+                    .copied()
+                    .unwrap_or(1);
+                let _kernel_shape = parser::get_attr_opt::<[i64]>(node, "kernel_shape")?;
+                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
+                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
+                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
                 match auto_pad {
                     None | Some("NOTSET") => (),
                     Some(s) => bail!("unsupported auto_pad {s}"),
@@ -862,7 +635,7 @@ fn simple_eval_(
                     .iter()
                     .map(|n| Ok(get(n.as_str())?.clone()))
                     .collect::<Result<Vec<Value>>>()?;
-                let axis: i64 = *get_attr(node, "axis")?;
+                let axis: i64 = *parser::get_attr(node, "axis")?;
                 if inputs.is_empty() {
                     bail!("empty concat")
                 };
@@ -937,7 +710,7 @@ fn simple_eval_(
                 let output = match value.r#type() {
                     AttributeType::Tensor => {
                         let t = value.t.as_ref().unwrap();
-                        get_tensor(t, &node.name)?
+                        parser::get_tensor(t, &node.name)?
                     }
                     rtype => bail!("unsupported 'value' type {rtype:?} for {}", node.name),
                 };
@@ -947,10 +720,10 @@ fn simple_eval_(
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Cast
             "Cast" => {
                 let input = get(&node.input[0])?;
-                let dt: i64 = *get_attr(node, "to")?;
+                let dt: i64 = *parser::get_attr(node, "to")?;
                 let dtype = match DataType::try_from(dt as i32) {
                     Ok(DataType::Int32) => DType::I64,
-                    Ok(dt) => match dtype(dt) {
+                    Ok(dt) => match parser::dtype(dt) {
                         Some(dt) => dt,
                         None => {
                             bail!("unsupported 'to' value {dt:?} for cast {}", node.name)
@@ -965,10 +738,12 @@ fn simple_eval_(
             }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#CumSum
             "CumSum" => {
-                let exclusive = get_attr_opt::<i64>(node, "exclusive")?
+                let exclusive = parser::get_attr_opt::<i64>(node, "exclusive")?
                     .copied()
                     .unwrap_or(0);
-                let reverse = get_attr_opt::<i64>(node, "reverse")?.copied().unwrap_or(0);
+                let reverse = parser::get_attr_opt::<i64>(node, "reverse")?
+                    .copied()
+                    .unwrap_or(0);
                 if exclusive != 0 {
                     bail!("only exclusive == 0 is supported in CumSum")
                 }
@@ -984,7 +759,9 @@ fn simple_eval_(
             }
             //  https://github.com/onnx/onnx/blob/main/docs/Operators.md#flatten
             "Flatten" => {
-                let axis = get_attr_opt::<i64>(node, "axis")?.copied().unwrap_or(1) as usize;
+                let axis = parser::get_attr_opt::<i64>(node, "axis")?
+                    .copied()
+                    .unwrap_or(1) as usize;
                 let input = get(&node.input[0])?;
                 let first_part: usize = input.shape().dims().iter().take(axis).product();
                 let end_index = input.shape().dims().iter().product::<usize>();
@@ -1006,7 +783,7 @@ fn simple_eval_(
                 } else {
                     "else_branch"
                 };
-                let sub_graph = get_attr::<GraphProto>(node, attr_name)?;
+                let sub_graph = parser::get_attr::<GraphProto>(node, attr_name)?;
                 if sub_graph.output.len() != node.output.len() {
                     bail!(
                         "If node {:?} is malformed: branch outputs ({}) don't match node outputs ({})",
@@ -1025,7 +802,7 @@ fn simple_eval_(
             }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#pad
             "Pad" => {
-                let mode = get_attr_opt(node, "mode")?.unwrap_or("constant");
+                let mode = parser::get_attr_opt(node, "mode")?.unwrap_or("constant");
                 let data = get(&node.input[0])?;
                 let pads = get(&node.input[1])?;
                 if node.input.len() > 2 {
@@ -1160,12 +937,15 @@ fn simple_eval_(
             "ReduceMax" => {
                 let input = get(&node.input[0])?;
                 let axes = get_opt(1);
-                let keepdims = get_attr_opt::<i64>(node, "keepdims")?.copied().unwrap_or(1) == 1;
+                let keepdims = parser::get_attr_opt::<i64>(node, "keepdims")?
+                    .copied()
+                    .unwrap_or(1)
+                    == 1;
 
                 let axes = if let Some(Ok(axes)) = axes {
                     // Satisfies version 18+
                     axes.to_vec1::<i64>().ok()
-                } else if let Ok(Some(axes)) = get_attr_opt::<[i64]>(node, "axes") {
+                } else if let Ok(Some(axes)) = parser::get_attr_opt::<[i64]>(node, "axes") {
                     // Backward compatiblity with version 13 and below
                     Some(axes.to_vec())
                 } else {
@@ -1225,7 +1005,9 @@ fn simple_eval_(
                 } else {
                     // If `axes` is empty and `noop_with_empty_axes` is set to `true (1)`
                     // ""input tensor will not be reduced,and the output tensor would be equivalent to input tensor.""
-                    if get_attr_opt::<i64>(node, "noop_with_empty_axes")?.copied() == Some(1) {
+                    if parser::get_attr_opt::<i64>(node, "noop_with_empty_axes")?.copied()
+                        == Some(1)
+                    {
                         input.clone()
                     } else {
                         let mut result = input.flatten_all()?;
@@ -1246,8 +1028,10 @@ fn simple_eval_(
             // TODO: This version is only compatible with ReduceMean V13 and below.
             "ReduceMean" => {
                 let input = get(&node.input[0])?;
-                let axes = get_attr_opt::<[i64]>(node, "axes")?;
-                let keepdims = get_attr_opt::<i64>(node, "keepdims")?.copied().unwrap_or(1);
+                let axes = parser::get_attr_opt::<[i64]>(node, "axes")?;
+                let keepdims = parser::get_attr_opt::<i64>(node, "keepdims")?
+                    .copied()
+                    .unwrap_or(1);
 
                 let n_dims = input.dims().len();
 
@@ -1269,12 +1053,15 @@ fn simple_eval_(
             "ReduceMin" => {
                 let input = get(&node.input[0])?;
                 let axes = get_opt(1);
-                let keepdims = get_attr_opt::<i64>(node, "keepdims")?.copied().unwrap_or(1) == 1;
+                let keepdims = parser::get_attr_opt::<i64>(node, "keepdims")?
+                    .copied()
+                    .unwrap_or(1)
+                    == 1;
 
                 let axes = if let Some(Ok(axes)) = axes {
                     // Satisfies version 18+
                     axes.to_vec1::<i64>().ok()
-                } else if let Ok(Some(axes)) = get_attr_opt::<[i64]>(node, "axes") {
+                } else if let Ok(Some(axes)) = parser::get_attr_opt::<[i64]>(node, "axes") {
                     // Backward compatiblity with version 13 and below
                     Some(axes.to_vec())
                 } else {
@@ -1334,7 +1121,9 @@ fn simple_eval_(
                 } else {
                     // If `axes` is empty and `noop_with_empty_axes` is set to `true (1)`
                     // ""input tensor will not be reduced,and the output tensor would be equivalent to input tensor.""
-                    if get_attr_opt::<i64>(node, "noop_with_empty_axes")?.copied() == Some(1) {
+                    if parser::get_attr_opt::<i64>(node, "noop_with_empty_axes")?.copied()
+                        == Some(1)
+                    {
                         input.clone()
                     } else {
                         let mut result = input.flatten_all()?;
@@ -1355,7 +1144,9 @@ fn simple_eval_(
             // Version 18 impl
             "Split" => {
                 let input_tensor = get(&node.input[0])?;
-                let axis = get_attr_opt::<i64>(node, "axis")?.copied().unwrap_or(0);
+                let axis = parser::get_attr_opt::<i64>(node, "axis")?
+                    .copied()
+                    .unwrap_or(0);
                 let axis = input_tensor.normalize_axis(axis)?;
 
                 // Determine split sizes
@@ -1365,7 +1156,7 @@ fn simple_eval_(
                     split_tensor.iter().map(|&x| x as usize).collect::<Vec<_>>()
                 } else {
                     let num_outputs = if let Some(&num_outputs_attrib) =
-                        get_attr_opt::<i64>(node, "num_outputs")?
+                        parser::get_attr_opt::<i64>(node, "num_outputs")?
                     {
                         num_outputs_attrib as usize
                     } else {
@@ -1433,10 +1224,13 @@ fn simple_eval_(
             "ReduceSum" => {
                 let input = get(&node.input[0])?;
                 let axes = get_opt(1);
-                let keepdims = get_attr_opt::<i64>(node, "keepdims")?.copied().unwrap_or(1);
-                let noop_with_empty_axes = get_attr_opt::<i64>(node, "noop_with_empty_axes")?
+                let keepdims = parser::get_attr_opt::<i64>(node, "keepdims")?
                     .copied()
-                    .unwrap_or(0);
+                    .unwrap_or(1);
+                let noop_with_empty_axes =
+                    parser::get_attr_opt::<i64>(node, "noop_with_empty_axes")?
+                        .copied()
+                        .unwrap_or(0);
 
                 let axes = match axes {
                     Some(Ok(axes)) => axes
@@ -1466,10 +1260,13 @@ fn simple_eval_(
             "ReduceL2" => {
                 let input = get(&node.input[0])?;
                 let axes = get_opt(1);
-                let keepdims = get_attr_opt::<i64>(node, "keepdims")?.copied().unwrap_or(1);
-                let noop_with_empty_axes = get_attr_opt::<i64>(node, "noop_with_empty_axes")?
+                let keepdims = parser::get_attr_opt::<i64>(node, "keepdims")?
                     .copied()
-                    .unwrap_or(0);
+                    .unwrap_or(1);
+                let noop_with_empty_axes =
+                    parser::get_attr_opt::<i64>(node, "noop_with_empty_axes")?
+                        .copied()
+                        .unwrap_or(0);
 
                 let input_sq = input.sqr()?;
 
@@ -1497,11 +1294,11 @@ fn simple_eval_(
                 values.insert(node.output[0].clone(), output);
             }
             random_type @ ("RandomUniform" | "RandomNormal") => {
-                let dt: i64 = get_attr_opt(node, "dtype")?.copied().unwrap_or(1); // 1 is float
-                                                                                  // type by
-                                                                                  // default
+                let dt: i64 = parser::get_attr_opt(node, "dtype")?.copied().unwrap_or(1); // 1 is float
+                                                                                          // type by
+                                                                                          // default
                 let dtype = match DataType::try_from(dt as i32) {
-                    Ok(dt) => match dtype(dt) {
+                    Ok(dt) => match parser::dtype(dt) {
                         Some(DType::U8 | DType::U32 | DType::I64) => {
                             bail!(
                                 "unsupported 'dtype' value {dt:?}, only floats are allowed, for {random_type} {}",
@@ -1523,28 +1320,28 @@ fn simple_eval_(
                         )
                     }
                 };
-                let seed: Option<f32> = get_attr_opt(node, "seed")?.copied();
+                let seed: Option<f32> = parser::get_attr_opt(node, "seed")?.copied();
                 if seed.is_some() {
                     bail!("seed for {random_type} is currently not supported")
                 };
-                let shape: Vec<usize> = get_attr::<[i64]>(node, "shape")?
+                let shape: Vec<usize> = parser::get_attr::<[i64]>(node, "shape")?
                     .iter()
                     .map(|x| *x as usize)
                     .collect();
                 let output = if random_type == "RandomUniform" {
-                    let low: f32 = get_attr_opt(node, "low")?.copied().unwrap_or(0.0);
-                    let high: f32 = get_attr_opt(node, "high")?.copied().unwrap_or(1.0);
+                    let low: f32 = parser::get_attr_opt(node, "low")?.copied().unwrap_or(0.0);
+                    let high: f32 = parser::get_attr_opt(node, "high")?.copied().unwrap_or(1.0);
                     Tensor::rand(low, high, shape, &Device::Cpu)?.to_dtype(dtype)?
                 } else {
-                    let mean: f32 = get_attr_opt(node, "mean")?.copied().unwrap_or(0.0);
-                    let scale: f32 = get_attr_opt(node, "scale")?.copied().unwrap_or(1.0);
+                    let mean: f32 = parser::get_attr_opt(node, "mean")?.copied().unwrap_or(0.0);
+                    let scale: f32 = parser::get_attr_opt(node, "scale")?.copied().unwrap_or(1.0);
                     Tensor::randn(mean, scale, shape, &Device::Cpu)?.to_dtype(dtype)?
                 };
                 values.insert(node.output[0].clone(), output);
             }
             "ArgMin" => {
                 let input = get(&node.input[0])?;
-                let axis_i64: i64 = get_attr_opt(node, "axis")?.copied().unwrap_or(0);
+                let axis_i64: i64 = parser::get_attr_opt(node, "axis")?.copied().unwrap_or(0);
                 let rank_i64: i64 = input.rank().try_into().unwrap();
                 if axis_i64 < -rank_i64 || axis_i64 >= rank_i64 {
                     bail!(
@@ -1555,8 +1352,10 @@ fn simple_eval_(
                     )
                 }
                 let axis = input.normalize_axis(axis_i64)?;
-                let keepdims: i64 = get_attr_opt(node, "keepdims")?.copied().unwrap_or(1);
-                let select_last_index: i64 = get_attr_opt(node, "select_last_index")?
+                let keepdims: i64 = parser::get_attr_opt(node, "keepdims")?
+                    .copied()
+                    .unwrap_or(1);
+                let select_last_index: i64 = parser::get_attr_opt(node, "select_last_index")?
                     .copied()
                     .unwrap_or(0);
                 if select_last_index == 1 {
@@ -1572,7 +1371,7 @@ fn simple_eval_(
             }
             "ArgMax" => {
                 let input = get(&node.input[0])?;
-                let axis_i64: i64 = get_attr_opt(node, "axis")?.copied().unwrap_or(0);
+                let axis_i64: i64 = parser::get_attr_opt(node, "axis")?.copied().unwrap_or(0);
                 let rank_i64: i64 = input.rank().try_into().unwrap();
                 if axis_i64 < -rank_i64 || axis_i64 >= rank_i64 {
                     bail!(
@@ -1583,8 +1382,10 @@ fn simple_eval_(
                     )
                 }
                 let axis = input.normalize_axis(axis_i64)?;
-                let keepdims: i64 = get_attr_opt(node, "keepdims")?.copied().unwrap_or(1);
-                let select_last_index: i64 = get_attr_opt(node, "select_last_index")?
+                let keepdims: i64 = parser::get_attr_opt(node, "keepdims")?
+                    .copied()
+                    .unwrap_or(1);
+                let select_last_index: i64 = parser::get_attr_opt(node, "select_last_index")?
                     .copied()
                     .unwrap_or(0);
                 if select_last_index == 1 {
@@ -1610,7 +1411,9 @@ fn simple_eval_(
                     }
                     DType::BF16 | DType::F16 | DType::F32 | DType::F64 => {}
                 }
-                let alpha = get_attr_opt::<f32>(node, "alpha")?.copied().unwrap_or(0.01);
+                let alpha = parser::get_attr_opt::<f32>(node, "alpha")?
+                    .copied()
+                    .unwrap_or(0.01);
                 let output = candle_nn::ops::leaky_relu(input, alpha.into())?;
                 values.insert(node.output[0].clone(), output);
             }
@@ -1620,14 +1423,22 @@ fn simple_eval_(
                 let b = get(&node.input[1])?;
                 let c = get(&node.input[2])?;
 
-                let alpha = get_attr_opt::<f32>(node, "alpha")?.copied().unwrap_or(1.0);
-                let beta = get_attr_opt::<f32>(node, "beta")?.copied().unwrap_or(1.0);
+                let alpha = parser::get_attr_opt::<f32>(node, "alpha")?
+                    .copied()
+                    .unwrap_or(1.0);
+                let beta = parser::get_attr_opt::<f32>(node, "beta")?
+                    .copied()
+                    .unwrap_or(1.0);
 
                 let alpha = Tensor::full(alpha, a.shape(), &Device::Cpu)?;
                 let beta = Tensor::full(beta, c.shape(), &Device::Cpu)?;
 
-                let trans_a = get_attr_opt::<i64>(node, "transA")?.copied().unwrap_or(0);
-                let trans_b = get_attr_opt::<i64>(node, "transB")?.copied().unwrap_or(0);
+                let trans_a = parser::get_attr_opt::<i64>(node, "transA")?
+                    .copied()
+                    .unwrap_or(0);
+                let trans_b = parser::get_attr_opt::<i64>(node, "transB")?
+                    .copied()
+                    .unwrap_or(0);
 
                 let a = if trans_a == 0 { a.clone() } else { a.t()? };
                 let b = if trans_b == 0 { b.clone() } else { b.t()? };
@@ -1639,13 +1450,15 @@ fn simple_eval_(
                 values.insert(node.output[0].clone(), output);
             }
             "LSTM" => {
-                let direction = get_attr_opt(node, "direction")?.unwrap_or("forward");
+                let direction = parser::get_attr_opt(node, "direction")?.unwrap_or("forward");
                 if direction != "forward" {
                     bail!("LSTM currently only supports direction == \"forward\"");
                 }
                 let num_directions = if direction == "bidirectional" { 2 } else { 1 };
-                let hidden_size: i64 = get_attr(node, "hidden_size").copied()?;
-                let input_forget = get_attr_opt(node, "input_forget")?.copied().unwrap_or(0);
+                let hidden_size: i64 = parser::get_attr(node, "hidden_size").copied()?;
+                let input_forget = parser::get_attr_opt(node, "input_forget")?
+                    .copied()
+                    .unwrap_or(0);
                 if input_forget != 0 {
                     bail!("LSTM currently only supports input_forget == 0");
                 }
@@ -1654,13 +1467,13 @@ fn simple_eval_(
                     "Tanh".to_string(),
                     "Tanh".to_string(),
                 ];
-                let activations = get_attr_opt_owned::<Vec<String>>(node, "activations")?
+                let activations = parser::get_attr_opt_owned::<Vec<String>>(node, "activations")?
                     .unwrap_or(activations_default.clone());
                 if activations != activations_default {
                     bail!("LSTM currently only supports default activations ({activations_default:?})");
                 }
                 // activation_alpha and activation_beta don't apply to (Sigmoid, Tanh, Tanh) so ignoring them is okay
-                if get_attr_opt::<f32>(node, "clip")?.is_some() {
+                if parser::get_attr_opt::<f32>(node, "clip")?.is_some() {
                     bail!("LSTM does not currently support clip attribute");
                 }
 
@@ -1673,7 +1486,7 @@ fn simple_eval_(
                 //     X.shape = [batch_size, seq_length, input_size],
                 //     Y.shape = [batch_size, seq_length, num_directions, hidden_size],
                 //     initial_h.shape = Y_h.shape = [batch_size, num_directions, hidden_size].
-                let layout = get_attr_opt(node, "layout")?.copied().unwrap_or(0);
+                let layout = parser::get_attr_opt(node, "layout")?.copied().unwrap_or(0);
                 if layout != 0 {
                     bail!("LSTM currently only supports layout == 0");
                 }
@@ -1803,6 +1616,7 @@ fn simple_eval_(
                     ("bias_ih_l0".to_string(), candle::Var::from_tensor(&wb)?),
                     ("bias_hh_l0".to_string(), candle::Var::from_tensor(&rb)?),
                 ]);
+                use crate::parser;
                 use candle_nn::rnn::RNN as _;
                 let lstm = candle_nn::rnn::lstm(
                     input_size,

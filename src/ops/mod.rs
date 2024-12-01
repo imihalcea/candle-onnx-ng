@@ -4,9 +4,10 @@ pub use onnxop::{OnnxOp, OnnxOpError, OnnxOpRegistry, OpOutput};
 pub mod compute_node;
 pub use compute_node::ComputeNode;
 
-mod math;
-mod logic;
 mod array;
+mod logic;
+mod math;
+mod nn;
 
 pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     let mut registry = OnnxOpRegistry::new();
@@ -14,5 +15,6 @@ pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     logic::register(&mut registry)?;
     math::register(&mut registry)?;
     array::register(&mut registry)?;
+    nn::register(&mut registry)?;
     Ok(registry)
 }

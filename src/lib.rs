@@ -7,8 +7,10 @@ pub mod onnx {
 
 pub mod eval;
 mod ops;
+mod parser;
 
-pub use eval::{dtype, simple_eval};
+pub use eval::simple_eval;
+pub use parser::dtype;
 
 pub fn read_file<P: AsRef<std::path::Path>>(p: P) -> Result<onnx::ModelProto> {
     let buf = std::fs::read(p)?;

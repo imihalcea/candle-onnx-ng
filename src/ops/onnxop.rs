@@ -1,8 +1,8 @@
 use crate::ops::ComputeNode;
+use candle_core as candle;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use candle_core as candle;
 
 pub type OpOutput = (String, candle::Tensor);
 
@@ -13,6 +13,7 @@ pub enum OnnxOpError {
     ComputationFailed(String),
     UnsupportedOp(String),
     DuplicateOp(String),
+    UnsupportedType(String),
 }
 
 impl From<OnnxOpError> for candle::Error {
@@ -27,7 +28,6 @@ impl From<candle_core::Error> for OnnxOpError {
     }
 }
 
-
 impl Display for OnnxOpError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -36,6 +36,7 @@ impl Display for OnnxOpError {
             OnnxOpError::ComputationFailed(s) => write!(f, "Computation failed: {}", s),
             OnnxOpError::UnsupportedOp(s) => write!(f, "Unsupported op: {}", s),
             OnnxOpError::DuplicateOp(s) => write!(f, "Duplicate op: {}", s),
+            OnnxOpError::UnsupportedType(s) => write!(f, "Unsupported type: {}", s),
         }
     }
 }

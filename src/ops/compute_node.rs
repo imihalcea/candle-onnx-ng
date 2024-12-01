@@ -1,7 +1,14 @@
+use crate::onnx::attribute_proto::AttributeType;
+use crate::onnx::tensor_proto::DataType;
 use crate::onnx::NodeProto;
-use candle_core::Tensor;
-use std::collections::HashMap;
+use crate::onnx::{self, GraphProto};
+use crate::ops::registry;
 use crate::ops::OnnxOpError;
+use crate::parser;
+use crate::parser::Value;
+use candle_core as candle;
+use candle_core::{bail, DType, Device, Tensor};
+use std::collections::{HashMap, HashSet};
 
 //This struct is used to represent a node in the computation graph
 //The idea is not to use the NodeProto directly in the computation graph
@@ -21,15 +28,46 @@ impl<'a> ComputeNode<'a> {
     }
 
     pub fn get_input(&self, index: usize) -> Result<&Tensor, OnnxOpError> {
-        let input_name = self.node_proto.input.get(index)
+        let input_name = self
+            .node_proto
+            .input
+            .get(index)
             .ok_or_else(|| OnnxOpError::InvalidInput(format!("input {} not found", index)))?;
 
-        self.context.get(input_name)
+        self.context
+            .get(input_name)
             .ok_or_else(|| OnnxOpError::InvalidInput(format!("input {} not found", index)))
     }
 
     pub fn get_output(&self, index: usize) -> Result<&String, OnnxOpError> {
-        self.node_proto.output.get(index)
+        self.node_proto
+            .output
+            .get(index)
             .ok_or_else(|| OnnxOpError::InvalidOutput(format!("output {} not found", index)))
+    }
+
+    pub(crate) fn get_attr_opt<T: parser::Attr + ?Sized>(
+        &self,
+        name: &str,
+    ) -> Result<Option<&T>, OnnxOpError> {
+        match self
+            .node_proto
+            .attribute
+            .iter()
+            .find(|attr| attr.name == name)
+        {
+            None => Ok(None),
+            Some(attr) => {
+                if attr.r#type() != T::TYPE {
+                    let error = OnnxOpError::UnsupportedType(format!(
+                        "unsupported type {:?} for '{name}' attribute in '{}' for {}",
+                        attr.r#type, self.node_proto.op_type, self.node_proto.name
+                    ));
+                    return Err(error);
+                }
+                let val = T::get(attr)?;
+                Ok(Some(val))
+            }
+        }
     }
 }
