@@ -13,7 +13,7 @@ impl OnnxOp for MaxPool {
 
         match auto_pad {
             None | Some("NOTSET") => (),
-            Some(s) =>{
+            Some(s) => {
                 let error = format!("unsupported auto_pad {s}");
                 return Err(OnnxOpError::UnsupportedAttribute(error));
             }
@@ -42,9 +42,7 @@ impl OnnxOp for MaxPool {
 
         let ys = match strides {
             None => xs.max_pool2d((k1, k2))?,
-            Some([s1, s2]) => {
-                xs.max_pool2d_with_stride((k1, k2), (*s1 as usize, *s2 as usize))?
-            }
+            Some([s1, s2]) => xs.max_pool2d_with_stride((k1, k2), (*s1 as usize, *s2 as usize))?,
             Some(strides) => {
                 let error = format!("only 2d MaxPool is supported, strides {strides:?}");
                 return Err(OnnxOpError::UnsupportedAttribute(error));

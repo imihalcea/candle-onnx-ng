@@ -26,8 +26,6 @@ fn test_evaluation_fails_without_defined_graph() -> Result<()> {
     Ok(())
 }
 
-
-
 // Below are new_ops that are implemented but not tested yet
 
 // "MaxPool"

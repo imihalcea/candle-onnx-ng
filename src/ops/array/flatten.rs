@@ -5,9 +5,7 @@ impl OnnxOp for Flatten {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
         //  https://github.com/onnx/onnx/blob/main/docs/Operators.md#flatten
         let input = node.get_input(0)?;
-        let axis = node.get_attr_opt::<i64>( "axis")?
-            .copied()
-            .unwrap_or(1) as usize;
+        let axis = node.get_attr_opt::<i64>("axis")?.copied().unwrap_or(1) as usize;
 
         let first_part: usize = input.shape().dims().iter().take(axis).product();
         let end_index = input.shape().dims().iter().product::<usize>();

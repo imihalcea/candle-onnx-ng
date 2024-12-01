@@ -114,7 +114,7 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-             "AveragePool" => {
+            "AveragePool" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#AveragePool
                 let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
                 let kernel_shape = parser::get_attr::<[i64]>(node, "kernel_shape")?;
