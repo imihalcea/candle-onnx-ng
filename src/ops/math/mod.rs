@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod basics;
+mod clip;
 mod cmp;
 mod matmul;
 
@@ -15,6 +16,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Exp", Box::new(basics::Exp))?;
     registry.insert("Pow", Box::new(basics::Pow))?;
     registry.insert("Sign", Box::new(basics::Sign))?;
+    registry.insert("Clip", Box::new(clip::Clip))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;
