@@ -114,29 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Squeeze" => {
-                let xs = get(&node.input[0])?;
-                let mut axes = if node.input.len() <= 1 {
-                    // contract all the dimensions with size 1 except the batch dim.
-                    xs.dims()
-                        .iter()
-                        .enumerate()
-                        .flat_map(|(idx, &s)| if s == 1 && idx > 0 { Some(idx) } else { None })
-                        .collect()
-                } else {
-                    get(&node.input[1])?
-                        .to_vec1::<i64>()?
-                        .iter()
-                        .map(|&i| xs.normalize_axis(i))
-                        .collect::<Result<Vec<_>>>()?
-                };
-                axes.sort();
-                let mut xs = xs.clone();
-                for &axis in axes.iter().rev() {
-                    xs = xs.squeeze(axis)?
-                }
-                values.insert(node.output[0].clone(), xs);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#ConstantOfShape
             "ConstantOfShape" => {
                 let input = get(&node.input[0])?;

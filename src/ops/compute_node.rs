@@ -27,6 +27,10 @@ impl<'a> ComputeNode<'a> {
         }
     }
 
+    pub fn input_len(&self) -> usize {
+        self.node_proto.input.len()
+    }
+
     pub fn get_input(&self, index: usize) -> Result<&Tensor, OnnxOpError> {
         let input_name = self
             .node_proto
