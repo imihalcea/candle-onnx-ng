@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 pub mod utils;
 
-
 #[test]
 #[ignore]
 fn test_clip_no_min_max() -> candle_core::Result<()> {
@@ -22,15 +21,8 @@ fn test_clip_min_max_provided() -> candle_core::Result<()> {
         "INPUT_X".to_string(),
         Tensor::new(&[1.0f32, 2.0, 3.0, 4.0, 5.0], &Device::Cpu)?,
     );
-    inputs.insert(
-        "MIN".to_string(),
-        Tensor::new(&[2.0f32], &Device::Cpu)?
-    );
-    inputs.insert(
-        "MAX".to_string(),
-        Tensor::new(&[4.0f32], &Device::Cpu)?
-    );
-
+    inputs.insert("MIN".to_string(), Tensor::new(&[2.0f32], &Device::Cpu)?);
+    inputs.insert("MAX".to_string(), Tensor::new(&[4.0f32], &Device::Cpu)?);
 
     let eval = simple_eval(&manual_graph, inputs)?;
 
@@ -42,7 +34,6 @@ fn test_clip_min_max_provided() -> candle_core::Result<()> {
     Ok(())
 }
 
-
 #[test]
 fn test_clip_min_greater_than_max() -> candle_core::Result<()> {
     let manual_graph = create_model();
@@ -52,15 +43,8 @@ fn test_clip_min_greater_than_max() -> candle_core::Result<()> {
         "INPUT_X".to_string(),
         Tensor::new(&[1.0f32, 2.0, 3.0], &Device::Cpu)?,
     );
-    inputs.insert(
-        "MIN".to_string(),
-        Tensor::new(&[5.0f32], &Device::Cpu)?
-    );
-    inputs.insert(
-        "MAX".to_string(),
-        Tensor::new(&[3.0f32], &Device::Cpu)?
-    );
-
+    inputs.insert("MIN".to_string(), Tensor::new(&[5.0f32], &Device::Cpu)?);
+    inputs.insert("MAX".to_string(), Tensor::new(&[3.0f32], &Device::Cpu)?);
 
     let eval = simple_eval(&manual_graph, inputs)?;
 
@@ -82,15 +66,9 @@ fn test_no_clipping_needed() -> candle_core::Result<()> {
         Tensor::new(&[2.0f32, 3.0, 4.0], &Device::Cpu)?,
     );
 
-    inputs.insert(
-        "MIN".to_string(),
-        Tensor::new(&[1.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MIN".to_string(), Tensor::new(&[1.0f32], &Device::Cpu)?);
 
-    inputs.insert(
-        "MAX".to_string(),
-        Tensor::new(&[5.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MAX".to_string(), Tensor::new(&[5.0f32], &Device::Cpu)?);
 
     let eval = simple_eval(&manual_graph, inputs)?;
 
@@ -112,15 +90,9 @@ fn test_all_values_below_min() -> candle_core::Result<()> {
         Tensor::new(&[-2.0f32, -3.0, -4.0], &Device::Cpu)?,
     );
 
-    inputs.insert(
-        "MIN".to_string(),
-        Tensor::new(&[0.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MIN".to_string(), Tensor::new(&[0.0f32], &Device::Cpu)?);
 
-    inputs.insert(
-        "MAX".to_string(),
-        Tensor::new(&[5.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MAX".to_string(), Tensor::new(&[5.0f32], &Device::Cpu)?);
 
     let eval = simple_eval(&manual_graph, inputs)?;
 
@@ -132,7 +104,6 @@ fn test_all_values_below_min() -> candle_core::Result<()> {
     Ok(())
 }
 
-
 #[test]
 fn test_all_values_below_max() -> candle_core::Result<()> {
     let manual_graph = create_model();
@@ -143,15 +114,9 @@ fn test_all_values_below_max() -> candle_core::Result<()> {
         Tensor::new(&[6.0f32, 7.0, 8.0], &Device::Cpu)?,
     );
 
-    inputs.insert(
-        "MIN".to_string(),
-        Tensor::new(&[0.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MIN".to_string(), Tensor::new(&[0.0f32], &Device::Cpu)?);
 
-    inputs.insert(
-        "MAX".to_string(),
-        Tensor::new(&[5.0f32], &Device::Cpu)?
-    );
+    inputs.insert("MAX".to_string(), Tensor::new(&[5.0f32], &Device::Cpu)?);
 
     let eval = simple_eval(&manual_graph, inputs)?;
 
