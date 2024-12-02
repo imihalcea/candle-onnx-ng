@@ -114,34 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Unsqueeze" => {
-                let xs = get(&node.input[0])?;
-                let axes = match parser::get_attr_opt::<[i64]>(node, "axes")? {
-                    Some(axis) => axis.to_vec(),
-                    None => get(&node.input[1])?.to_vec1::<i64>()?,
-                };
-                let mut axes = axes
-                    .iter()
-                    .map(|&i| {
-                        if i == xs.rank() as i64 {
-                            Ok(xs.rank())
-                        } else if i < 0 {
-                            // normalize_axis doesn't work correctly here
-                            // because we actually want normalized with respect
-                            // to the final size, not the current (off by one)
-                            Ok(xs.rank() - (-i as usize) + 1)
-                        } else {
-                            xs.normalize_axis(i)
-                        }
-                    })
-                    .collect::<Result<Vec<_>>>()?;
-                axes.sort();
-                let mut xs = xs.clone();
-                for &axis in axes.iter().rev() {
-                    xs = xs.unsqueeze(axis)?
-                }
-                values.insert(node.output[0].clone(), xs);
-            }
             "Clip" => {
                 let xs = get(&node.input[0])?;
                 let xs = if let Some(mins) = get_opt(1) {
