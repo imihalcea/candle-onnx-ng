@@ -161,7 +161,7 @@ fn test_squeeze_neg_axes_operation() -> candle_core::Result<()> {
         quantization_annotation: vec![],
     }));
 
-    let x = Tensor::rand(1f32,100f32, &[1,3,1,5], &Device::Cpu)?;
+    let x = Tensor::rand(1f32, 100f32, &[1, 3, 1, 5], &Device::Cpu)?;
 
     let axes = Tensor::from_vec(vec![-2i64], &[1], &Device::Cpu)?;
 
