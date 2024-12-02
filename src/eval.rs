@@ -114,16 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#ConstantOfShape
-            "ConstantOfShape" => {
-                let input = get(&node.input[0])?;
-                let value = parser::get_attr_opt_owned::<Tensor>(node, "value")?
-                    .unwrap_or(Tensor::zeros((), DType::F32, &Device::Cpu)?);
-
-                let xs = Tensor::ones(input.shape(), value.dtype(), input.device())?
-                    .broadcast_mul(&value)?;
-                values.insert(node.output[0].clone(), xs);
-            }
             "Unsqueeze" => {
                 let xs = get(&node.input[0])?;
                 let axes = match parser::get_attr_opt::<[i64]>(node, "axes")? {

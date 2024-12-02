@@ -24,7 +24,7 @@ pub(crate) trait Attr {
     fn get(attr: &onnx::AttributeProto) -> candle_core::Result<&Self>;
 }
 
-trait AttrOwned: Sized {
+pub(crate) trait AttrOwned: Sized {
     const TYPE: AttributeType;
     fn get(attr: &onnx::AttributeProto) -> candle_core::Result<Self>;
 }

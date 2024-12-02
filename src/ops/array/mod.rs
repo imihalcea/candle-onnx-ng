@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
+mod constshape;
 mod flatten;
 mod reshape;
 mod squeeze;
@@ -10,5 +11,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Transpose", Box::new(transpose::Transpose))?;
     registry.insert("Flatten", Box::new(flatten::Flatten))?;
     registry.insert("Squeeze", Box::new(squeeze::Squeeze))?;
+    registry.insert("ConstantOfShape", Box::new(constshape::ConstantOfShape))?;
     Ok(())
 }

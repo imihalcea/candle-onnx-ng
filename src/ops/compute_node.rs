@@ -60,4 +60,10 @@ impl<'a> ComputeNode<'a> {
     pub(crate) fn get_attr<T: parser::Attr + ?Sized>(&self, name: &str) -> Result<&T, OnnxOpError> {
         parser::get_attr(&self.node_proto, name).map_err(OnnxOpError::from)
     }
+    pub(crate) fn get_attr_opt_owned<T: parser::AttrOwned>(
+        &self,
+        name: &str,
+    ) -> Result<Option<T>, OnnxOpError> {
+        parser::get_attr_opt_owned(&self.node_proto, name).map_err(OnnxOpError::from)
+    }
 }
