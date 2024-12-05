@@ -1,5 +1,5 @@
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
-use candle_core::{DType, Device, Error, Tensor};
+use candle_core::{DType, Device, Tensor};
 pub(crate) struct ConstantOfShape;
 impl OnnxOp for ConstantOfShape {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {

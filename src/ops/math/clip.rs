@@ -1,5 +1,4 @@
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
-use candle_core::Tensor;
 
 pub(crate) struct Clip;
 impl OnnxOp for Clip {

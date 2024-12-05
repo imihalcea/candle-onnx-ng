@@ -1,4 +1,4 @@
-use candle_core::{DType, Device, Tensor};
+use candle_core::{Device, Tensor};
 use candle_onnx_ng::onnx::{GraphProto, ModelProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
 use std::collections::HashMap;

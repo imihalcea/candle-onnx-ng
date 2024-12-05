@@ -1,14 +1,8 @@
-use crate::onnx::attribute_proto::AttributeType;
-use crate::onnx::tensor_proto::DataType;
 use crate::onnx::NodeProto;
-use crate::onnx::{self, GraphProto};
-use crate::ops::registry;
 use crate::ops::OnnxOpError;
 use crate::parser;
-use crate::parser::Value;
-use candle_core as candle;
-use candle_core::{bail, DType, Device, Tensor};
-use std::collections::{HashMap, HashSet};
+use candle_core::Tensor;
+use std::collections::HashMap;
 
 //This struct is used to represent a node in the computation graph
 //The idea is not to use the NodeProto directly in the computation graph
