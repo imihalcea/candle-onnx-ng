@@ -141,7 +141,6 @@ fn test_clip_max_not_provided() -> candle_core::Result<()> {
     assert_eq!(z.to_vec1::<f32>()?, vec![2.0f32, 2.0, 3.0, 4.0, 5.0]);
 
     Ok(())
-
 }
 
 #[test]
@@ -164,7 +163,6 @@ fn test_clip_min_not_provided() -> candle_core::Result<()> {
     assert_eq!(z.to_vec1::<f32>()?, vec![1.0f32, 2.0, 3.0, 4.0, 4.0]);
 
     Ok(())
-
 }
 
 #[test]
@@ -186,10 +184,7 @@ fn test_clip_min_and_max_not_provided() -> candle_core::Result<()> {
     assert_eq!(z.to_vec1::<f32>()?, vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 
     Ok(())
-
 }
-
-
 
 fn create_model() -> ModelProto {
     utils::create_model_proto_with_graph(Some(GraphProto {

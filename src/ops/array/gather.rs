@@ -8,17 +8,15 @@ impl OnnxOp for Gather {
         // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Gather
         let xs = node.get_input(0)?;
         let indices = node.get_input(1)?;
-        let axis = node.get_attr_opt::<i64>("axis")?
-            .copied()
-            .unwrap_or(0);
+        let axis = node.get_attr_opt::<i64>("axis")?.copied().unwrap_or(0);
         let axis = xs.normalize_axis(axis)?;
 
         // index_select does not support negative indices, so normalize them
         // to positive indices.
         let indices = &{
             let zeros = Tensor::zeros(indices.shape(), indices.dtype(), indices.device())?;
-            let max = Tensor::new(xs.dims()[axis] as i64, indices.device())?
-                .to_dtype(indices.dtype())?;
+            let max =
+                Tensor::new(xs.dims()[axis] as i64, indices.device())?.to_dtype(indices.dtype())?;
             let mask = indices.lt(&zeros)?;
             mask.to_dtype(indices.dtype())?
                 .broadcast_mul(&max)?

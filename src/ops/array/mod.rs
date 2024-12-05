@@ -2,11 +2,11 @@ use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
 mod constshape;
 mod flatten;
+mod gather;
 mod reshape;
 mod squeeze;
 mod transpose;
 mod unsqueeze;
-mod gather;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("Reshape", Box::new(reshape::Reshape))?;
