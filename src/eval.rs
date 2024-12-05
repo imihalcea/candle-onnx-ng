@@ -114,51 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Gather" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Gather
-                let xs = get(&node.input[0])?;
-                let indices = get(&node.input[1])?;
-                let axis = parser::get_attr_opt::<i64>(node, "axis")?
-                    .copied()
-                    .unwrap_or(0);
-                let axis = xs.normalize_axis(axis)?;
-
-                // index_select does not support negative indices, so normalize them
-                // to positive indices.
-                let indices = &{
-                    let zeros = Tensor::zeros(indices.shape(), indices.dtype(), indices.device())?;
-                    let max = Tensor::new(xs.dims()[axis] as i64, indices.device())?
-                        .to_dtype(indices.dtype())?;
-                    let mask = indices.lt(&zeros)?;
-                    mask.to_dtype(indices.dtype())?
-                        .broadcast_mul(&max)?
-                        .add(indices)?
-                };
-
-                // In Pytorch or Numpy this can be done by indexing the xs tensor using the indices
-                // tensor directly, but candle does not support tensor indexing at the moment, so
-                // some workarounds must be done.
-                let xs = match indices.dims() {
-                    [] => {
-                        let index = indices.to_vec0::<i64>()? as usize;
-                        xs.narrow(axis, index, 1)?.squeeze(axis)?
-                    }
-                    [_] => xs.index_select(indices, axis)?,
-                    [first, _] => {
-                        let mut v = Vec::with_capacity(*first);
-                        for i in 0..*first {
-                            v.push(xs.index_select(&indices.get(i)?, axis)?)
-                        }
-                        Tensor::stack(&v, axis)?
-                    }
-                    _ => {
-                        // TODO: Provide an op to handle the ONNX generalized gather op ideally in a
-                        // differentiable way.
-                        todo!("implement gather for {xs:?} {indices:?} axis {axis}")
-                    }
-                };
-                values.insert(node.output[0].clone(), xs);
-            }
             // https://onnx.ai/onnx/operators/onnx__GatherElements.html#gatherelements
             // A Note to fellow lurkers:
             // The numpy based `gather_elements` implementation in `onnx` tests [here](https://github.com/onnx/onnx/blob/main/onnx/backend/test/case/node/gatherelements.py)
