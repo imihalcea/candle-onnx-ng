@@ -50,3 +50,61 @@ impl OnnxOp for Gather {
         Ok((output_name.clone(), xs))
     }
 }
+
+pub(crate) struct GatherElements;
+
+impl OnnxOp for GatherElements {
+
+    // https://onnx.ai/onnx/operators/onnx__GatherElements.html#gatherelements
+    // A Note to fellow lurkers:
+    // The numpy based `gather_elements` implementation in `onnx` tests [here](https://github.com/onnx/onnx/blob/main/onnx/backend/test/case/node/gatherelements.py)
+    // and examples is incorrect.
+    // Use `torch.gather` for the validating/ verifying against the proper behaviour
+
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        let data = node.get_input(0)?;
+        let indices = node.get_input(1)?;
+
+        let rank = data.rank();
+        if rank != indices.rank() {
+            return Err(OnnxOpError::InvalidInput(format!(
+                "indices must have same rank as input data. Data rank [{}] != indices rank [{}]",
+                data.rank(),
+                indices.rank()
+            )));
+        }
+
+        let axis = {
+            let axis_i64 = node.get_attr_opt::<i64>("axis")?
+                .copied()
+                .unwrap_or(0);
+            let axis = data.normalize_axis(axis_i64)?;
+
+            if axis >= rank {
+                return Err(OnnxOpError::InvalidInput(format!(
+                    "axis ({}) out of accepted range [-rank, rank-1] which was [-{rank}, {}]",
+                    axis_i64,
+                    rank - 1
+                )));
+            }
+            axis
+        };
+
+        // index_select does not support negative indices, so normalize them
+        // to positive indices.
+        let indices = &{
+            let zeros = Tensor::zeros(indices.shape(), indices.dtype(), indices.device())?;
+            let max = Tensor::new(data.dims()[axis] as i64, indices.device())?
+                .to_dtype(indices.dtype())?;
+            let mask = indices.lt(&zeros)?;
+            mask.to_dtype(indices.dtype())?
+                .broadcast_mul(&max)?
+                .add(indices)?
+        };
+
+        let output = data.gather(indices, axis)?;
+        let output_name = node.get_output(0)?;
+
+        Ok((output_name.clone(), output))
+    }
+}

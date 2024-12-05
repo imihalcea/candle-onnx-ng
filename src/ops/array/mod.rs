@@ -16,5 +16,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("ConstantOfShape", Box::new(constshape::ConstantOfShape))?;
     registry.insert("Unsqueeze", Box::new(unsqueeze::Unsqueeze))?;
     registry.insert("Gather", Box::new(gather::Gather))?;
+    registry.insert("GatherElements", Box::new(gather::GatherElements))?;
     Ok(())
 }
