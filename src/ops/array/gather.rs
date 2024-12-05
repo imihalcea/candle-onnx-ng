@@ -54,7 +54,6 @@ impl OnnxOp for Gather {
 pub(crate) struct GatherElements;
 
 impl OnnxOp for GatherElements {
-
     // https://onnx.ai/onnx/operators/onnx__GatherElements.html#gatherelements
     // A Note to fellow lurkers:
     // The numpy based `gather_elements` implementation in `onnx` tests [here](https://github.com/onnx/onnx/blob/main/onnx/backend/test/case/node/gatherelements.py)
@@ -75,9 +74,7 @@ impl OnnxOp for GatherElements {
         }
 
         let axis = {
-            let axis_i64 = node.get_attr_opt::<i64>("axis")?
-                .copied()
-                .unwrap_or(0);
+            let axis_i64 = node.get_attr_opt::<i64>("axis")?.copied().unwrap_or(0);
             let axis = data.normalize_axis(axis_i64)?;
 
             if axis >= rank {

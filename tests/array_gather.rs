@@ -134,7 +134,6 @@ fn test_gather_operation() -> candle_core::Result<()> {
     Ok(())
 }
 
-
 // GatherElements
 #[test]
 fn test_gather_elements() -> candle_core::Result<()> {

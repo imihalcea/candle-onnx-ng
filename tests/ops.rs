@@ -47,9 +47,6 @@ fn test_evaluation_fails_without_defined_graph() -> Result<()> {
 // "Clip"
 // #[test]
 
-
-
-
 // "Size"
 #[test]
 fn test_size_operation() -> Result<()> {
