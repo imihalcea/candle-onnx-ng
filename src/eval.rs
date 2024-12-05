@@ -114,20 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Clip" => {
-                let xs = get(&node.input[0])?;
-                let xs = if let Some(mins) = get_opt(1) {
-                    xs.broadcast_maximum(mins?)?
-                } else {
-                    xs.clone()
-                };
-                let xs = if let Some(maxs) = get_opt(2) {
-                    xs.broadcast_minimum(maxs?)?
-                } else {
-                    xs.clone()
-                };
-                values.insert(node.output[0].clone(), xs);
-            }
             "Gather" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Gather
                 let xs = get(&node.input[0])?;
