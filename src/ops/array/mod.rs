@@ -3,6 +3,7 @@ use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod constshape;
 mod flatten;
 mod gather;
+mod range;
 mod reshape;
 mod shape;
 mod size;
@@ -21,5 +22,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("GatherElements", Box::new(gather::GatherElements))?;
     registry.insert("Shape", Box::new(shape::Shape))?;
     registry.insert("Size", Box::new(size::Size))?;
+    registry.insert("Range", Box::new(range::Range))?;
     Ok(())
 }
