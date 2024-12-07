@@ -114,24 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Shape" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Shape
-                let xs = get(&node.input[0])?;
-                let start = parser::get_attr_opt::<i64>(node, "start")?
-                    .copied()
-                    .unwrap_or(0);
-                let end = parser::get_attr_opt::<i64>(node, "end")?
-                    .copied()
-                    .unwrap_or(-1);
-                let start = xs.normalize_axis(start)?;
-                let end = xs.normalize_axis(end)?;
-                let mut dims = vec![];
-                for idx in start..=end {
-                    dims.push(xs.dim(idx)? as i64)
-                }
-                let dims = Tensor::from_vec(dims, xs.rank(), xs.device())?;
-                values.insert(node.output[0].clone(), dims);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Size
             "Size" => {
                 let data = get(&node.input[0])?;
