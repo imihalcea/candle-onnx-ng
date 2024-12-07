@@ -8,6 +8,7 @@ mod shape;
 mod squeeze;
 mod transpose;
 mod unsqueeze;
+mod size;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("Reshape", Box::new(reshape::Reshape))?;
@@ -19,5 +20,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Gather", Box::new(gather::Gather))?;
     registry.insert("GatherElements", Box::new(gather::GatherElements))?;
     registry.insert("Shape", Box::new(shape::Shape))?;
+    registry.insert("Size", Box::new(size::Size))?;
     Ok(())
 }

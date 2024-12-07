@@ -114,13 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Size
-            "Size" => {
-                let data = get(&node.input[0])?;
-                let size: usize = data.dims().iter().product();
-                let output = Tensor::from_slice(&[size as i64], (), data.device())?;
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Sqrt
             "Sqrt" => {
                 let xs = get(&node.input[0])?;
