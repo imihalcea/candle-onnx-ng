@@ -9,6 +9,7 @@ use std::collections::HashMap;
 //On a longer term, this can lead to a more optimized representation of the computation graph.
 //For now, it is just a wrapper around the NodeProto and the context
 pub struct ComputeNode<'a> {
+    pub(crate) name: &'a str,
     node_proto: &'a NodeProto,
     context: &'a HashMap<String, Tensor>,
 }
@@ -16,6 +17,7 @@ pub struct ComputeNode<'a> {
 impl<'a> ComputeNode<'a> {
     pub fn new(node_proto: &'a NodeProto, context: &'a HashMap<String, Tensor>) -> Self {
         ComputeNode {
+            name: &node_proto.name,
             node_proto,
             context,
         }

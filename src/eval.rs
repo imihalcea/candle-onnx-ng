@@ -114,7 +114,7 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-          // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Greater
+            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Greater
             "Greater" => {
                 let a = get(&node.input[0])?;
                 let b = get(&node.input[1])?;
@@ -161,122 +161,6 @@ fn simple_eval_(
                 let b = b.broadcast_as(shape)?;
                 let output = cond.where_cond(&a, &b)?;
                 values.insert(node.output[0].clone(), output);
-            }
-            "Conv" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Conv
-                let dilations = parser::get_attr_opt::<[i64]>(node, "dilations")?;
-                let groups = parser::get_attr_opt::<i64>(node, "group")?
-                    .copied()
-                    .unwrap_or(1);
-                let _kernel_shape = parser::get_attr_opt::<[i64]>(node, "kernel_shape")?;
-                let pads = parser::get_attr_opt::<[i64]>(node, "pads")?;
-                let strides = parser::get_attr_opt::<[i64]>(node, "strides")?;
-                let auto_pad = parser::get_attr_opt::<str>(node, "auto_pad")?;
-                match auto_pad {
-                    None | Some("NOTSET") => (),
-                    Some(s) => bail!("unsupported auto_pad {s}"),
-                };
-                let xs = get(&node.input[0])?;
-                let ws = get(&node.input[1])?;
-                let ys = match ws.rank() {
-                    3 => {
-                        let (pads, xs) = match pads {
-                            None => (0, xs.clone()),
-                            Some([p]) => (*p as usize, xs.clone()),
-                            Some([p1, p2]) => {
-                                if p1 != p2 {
-                                    (0usize, xs.pad_with_zeros(2, *p1 as usize, *p2 as usize)?)
-                                } else {
-                                    (*p1 as usize, xs.clone())
-                                }
-                            }
-                            Some(pads) => {
-                                bail!("more pads than expected in conv1d {pads:?} {}", node.name)
-                            }
-                        };
-                        let strides = match strides {
-                            None => 1,
-                            Some([p]) => *p as usize,
-                            Some(s) => {
-                                bail!("more strides than expected in conv1d {s:?} {}", node.name)
-                            }
-                        };
-                        let dilations = match dilations {
-                            None => 1,
-                            Some([p]) => *p as usize,
-                            Some(s) => {
-                                bail!("more dilations than expected in conv1d {s:?} {}", node.name)
-                            }
-                        };
-                        xs.conv1d(ws, pads, strides, dilations, groups as usize)?
-                    }
-                    4 => {
-                        let (pads, xs) = match pads {
-                            None => (0, xs.clone()),
-                            Some([p]) => (*p as usize, xs.clone()),
-                            Some(&[p1, p2, p3, p4]) => {
-                                let p1 = p1 as usize;
-                                let p2 = p2 as usize;
-                                let p3 = p3 as usize;
-                                let p4 = p4 as usize;
-                                if p1 != p2 || p1 != p3 || p1 != p4 {
-                                    (0, xs.pad_with_zeros(2, p1, p3)?.pad_with_zeros(3, p2, p4)?)
-                                } else {
-                                    (p1, xs.clone())
-                                }
-                            }
-                            Some(pads) => {
-                                bail!("more pads than expected in conv2d {pads:?} {}", node.name)
-                            }
-                        };
-                        let strides = match strides {
-                            None => 1,
-                            Some([p]) => *p as usize,
-                            Some([p1, p2]) => {
-                                if p1 != p2 {
-                                    bail!(
-                                        "strides have to be the same on both axis {pads:?} {}",
-                                        node.name
-                                    )
-                                }
-                                *p1 as usize
-                            }
-                            Some(s) => {
-                                bail!("more strides than expected in conv2d {s:?} {}", node.name)
-                            }
-                        };
-                        let dilations = match dilations {
-                            None => 1,
-                            Some([p]) => *p as usize,
-                            Some([p1, p2]) => {
-                                if p1 != p2 {
-                                    bail!(
-                                        "dilations have to be the same on both axis {pads:?} {}",
-                                        node.name
-                                    )
-                                }
-                                *p1 as usize
-                            }
-                            Some(s) => {
-                                bail!("more dilations than expected in conv2d {s:?} {}", node.name)
-                            }
-                        };
-                        xs.conv2d(ws, pads, strides, dilations, groups as usize)?
-                    }
-                    rank => bail!(
-                        "unsupported rank for weight matrix {rank} in conv {}",
-                        node.name
-                    ),
-                };
-                let ys = if node.input.len() > 2 {
-                    let bs = get(&node.input[2])?;
-                    let mut bs_shape = vec![1; ys.rank()];
-                    bs_shape[1] = bs.elem_count();
-                    ys.broadcast_add(&bs.reshape(bs_shape)?)?
-                } else {
-                    ys
-                };
-                values.insert(node.output[0].clone(), ys);
             }
             "Concat" => {
                 // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Concat
