@@ -3,6 +3,7 @@ mod basics;
 mod clip;
 mod cmp;
 mod matmul;
+mod sqrt;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     //comparison
@@ -17,6 +18,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Pow", Box::new(basics::Pow))?;
     registry.insert("Sign", Box::new(basics::Sign))?;
     registry.insert("Clip", Box::new(clip::Clip))?;
+    registry.insert("Sqrt", Box::new(sqrt::Sqrt))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;
