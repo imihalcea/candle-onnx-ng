@@ -5,10 +5,10 @@ mod flatten;
 mod gather;
 mod reshape;
 mod shape;
+mod size;
 mod squeeze;
 mod transpose;
 mod unsqueeze;
-mod size;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("Reshape", Box::new(reshape::Reshape))?;
