@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
+mod concat;
 mod constshape;
 mod flatten;
 mod gather;
@@ -23,5 +24,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Shape", Box::new(shape::Shape))?;
     registry.insert("Size", Box::new(size::Size))?;
     registry.insert("Range", Box::new(range::Range))?;
+    registry.insert("Concat", Box::new(concat::Concat))?;
     Ok(())
 }

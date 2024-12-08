@@ -162,21 +162,6 @@ fn simple_eval_(
                 let output = cond.where_cond(&a, &b)?;
                 values.insert(node.output[0].clone(), output);
             }
-            "Concat" => {
-                // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Concat
-                let inputs = node
-                    .input
-                    .iter()
-                    .map(|n| Ok(get(n.as_str())?.clone()))
-                    .collect::<Result<Vec<Value>>>()?;
-                let axis: i64 = *parser::get_attr(node, "axis")?;
-                if inputs.is_empty() {
-                    bail!("empty concat")
-                };
-                let axis = inputs[0].normalize_axis(axis)?;
-                let output = Tensor::cat(&inputs, axis)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Abs" => {
                 let input = get(&node.input[0])?;
                 let output = input.abs()?;

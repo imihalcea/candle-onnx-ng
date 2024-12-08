@@ -27,6 +27,13 @@ impl<'a> ComputeNode<'a> {
         self.node_proto.input.len()
     }
 
+    pub fn get_all_inputs(&self) -> Result<Vec<&Tensor>, OnnxOpError> {
+        let inputs = (0..self.input_len())
+            .map(|i| self.get_input(i))
+            .collect::<Result<Vec<_>, _>>();
+        inputs
+    }
+
     pub fn get_input(&self, index: usize) -> Result<&Tensor, OnnxOpError> {
         let input_name = self
             .node_proto
