@@ -114,22 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Greater
-            "Greater" => {
-                let a = get(&node.input[0])?;
-                let b = get(&node.input[1])?;
-
-                let output = a.broadcast_gt(b)?;
-                values.insert(node.output[0].clone(), output);
-            }
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Less
-            "Less" => {
-                let a = get(&node.input[0])?;
-                let b = get(&node.input[1])?;
-
-                let output = a.broadcast_lt(b)?;
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Log
             "Log" => {
                 let a = get(&node.input[0])?;

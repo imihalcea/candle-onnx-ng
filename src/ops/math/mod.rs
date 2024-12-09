@@ -8,6 +8,8 @@ mod sqrt;
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     //comparison
     registry.insert("Equal", Box::new(cmp::Equal))?;
+    registry.insert("Greater", Box::new(cmp::Greater))?;
+    registry.insert("Less", Box::new(cmp::Less))?;
 
     //basics
     registry.insert("Add", Box::new(basics::Add))?;
