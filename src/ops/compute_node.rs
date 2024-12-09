@@ -70,12 +70,6 @@ impl<'a> ComputeNode<'a> {
         parser::get_attr_opt_owned(&self.node_proto, name).map_err(OnnxOpError::from)
     }
 
-    // pub(crate) fn get(&self, name: &str) -> Result<&Tensor, OnnxOpError> {
-    //     self.context
-    //         .get(name)
-    //         .ok_or_else(|| OnnxOpError::InvalidInput(name.to_string()))
-    // }
-
     pub(crate) fn get_opt(&self, i: usize) -> Option<&Tensor> {
         self.node_proto
             .input

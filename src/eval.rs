@@ -114,16 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Min
-            "Min" => {
-                let mut output = get(&node.input[0])?.clone();
-                for input in node.input.iter() {
-                    let input = get(input)?;
-                    output = output.broadcast_minimum(input)?
-                }
-
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Where
             "Where" => {
                 let cond = get(&node.input[0])?;

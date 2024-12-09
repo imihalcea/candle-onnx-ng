@@ -26,5 +26,8 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;
 
+    //statistics
+    registry.insert("Min", Box::new(basics::Min))?;
+
     Ok(())
 }
