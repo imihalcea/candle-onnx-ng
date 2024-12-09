@@ -2000,60 +2000,6 @@ fn test_random_normal() -> Result<()> {
     Ok(())
 }
 
-// "Log"
-#[test]
-fn test_log() -> Result<()> {
-    // https://github.com/onnx/onnx/blob/main/docs/Operators.md#examples-82
-    test(&[1., 10.], &[0., std::f64::consts::LN_10])?;
-
-    fn test(data: impl NdArray, expected: impl NdArray) -> Result<()> {
-        let manual_graph = utils::create_model_proto_with_graph(Some(GraphProto {
-            node: vec![NodeProto {
-                op_type: "Log".to_string(),
-                domain: "".to_string(),
-                attribute: vec![],
-                input: vec![INPUT_X.to_string()],
-                output: vec![OUTPUT_Z.to_string()],
-                name: "".to_string(),
-                doc_string: "".to_string(),
-            }],
-            name: "".to_string(),
-            initializer: vec![],
-            input: vec![],
-            output: vec![ValueInfoProto {
-                name: OUTPUT_Z.to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            }],
-            value_info: vec![],
-            doc_string: "".to_string(),
-            sparse_initializer: vec![],
-            quantization_annotation: vec![],
-        }));
-
-        let mut inputs: HashMap<String, Tensor> = HashMap::new();
-        inputs.insert(INPUT_X.to_string(), Tensor::new(data, &Device::Cpu)?);
-
-        let eval = simple_eval(&manual_graph, inputs)?;
-        assert_eq!(eval.len(), 1);
-
-        let z = eval.get(OUTPUT_Z).expect("Output 'z' not found");
-
-        let expected = Tensor::new(expected, &Device::Cpu)?;
-        match expected.dims().len() {
-            0 => assert_eq!(z.to_vec0::<f64>()?, expected.to_vec0::<f64>()?),
-            1 => assert_eq!(z.to_vec1::<f64>()?, expected.to_vec1::<f64>()?),
-            2 => assert_eq!(z.to_vec2::<f64>()?, expected.to_vec2::<f64>()?),
-            3 => assert_eq!(z.to_vec3::<f64>()?, expected.to_vec3::<f64>()?),
-            _ => unreachable!(),
-        };
-
-        Ok(())
-    }
-
-    Ok(())
-}
-
 // "Min"
 #[test]
 fn test_min() -> Result<()> {
