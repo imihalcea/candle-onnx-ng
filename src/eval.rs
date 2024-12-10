@@ -114,11 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Sigmoid" => {
-                let input = get(&node.input[0])?;
-                let output = candle_nn::ops::sigmoid(input)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Gelu" => {
                 let input = get(&node.input[0])?;
                 let output = input.gelu_erf()?;
