@@ -28,6 +28,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
 
     //statistics
     registry.insert("Min", Box::new(basics::Min))?;
+    registry.insert("Where", Box::new(basics::Where))?;
 
     Ok(())
 }

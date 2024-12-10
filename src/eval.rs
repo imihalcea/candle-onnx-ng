@@ -114,21 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Where
-            "Where" => {
-                let cond = get(&node.input[0])?;
-                let a = get(&node.input[1])?;
-                let b = get(&node.input[2])?;
-
-                // where_cond requires that all inputs are the same shape.
-                // In contrast, the Where op in ONNX only requires that they are broadcastable.
-                let shape = broadcast_shape_from_many(&[cond.dims(), a.dims(), b.dims()])?;
-                let cond = cond.broadcast_as(shape.clone())?;
-                let a = a.broadcast_as(shape.clone())?;
-                let b = b.broadcast_as(shape)?;
-                let output = cond.where_cond(&a, &b)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Abs" => {
                 let input = get(&node.input[0])?;
                 let output = input.abs()?;
@@ -1186,13 +1171,3 @@ fn broadcast_shape(shape_a: &[usize], shape_b: &[usize]) -> Result<Vec<usize>> {
     Ok(target_shape)
 }
 
-fn broadcast_shape_from_many(shapes: &[&[usize]]) -> Result<Vec<usize>> {
-    if shapes.is_empty() {
-        return Ok(Vec::new());
-    }
-    let mut shape_out = shapes[0].to_vec();
-    for shape in shapes[1..].iter() {
-        shape_out = broadcast_shape(&shape_out, shape)?;
-    }
-    Ok(shape_out)
-}

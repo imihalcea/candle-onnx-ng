@@ -1,6 +1,7 @@
 use crate::ops::compute_node::ComputeNode;
 use crate::ops::{OnnxOp, OnnxOpError, OpOutput};
 use candle_core::DType;
+use crate::ops::tensor_helper::{broadcast_shape_from_many};
 
 pub(crate) struct Add;
 impl OnnxOp for Add {
@@ -117,6 +118,28 @@ impl OnnxOp for Min {
         for input in all_inputs.iter() {
             output = output.broadcast_minimum(input)?
         }
+        let output_name = node.get_output(0)?;
+
+        Ok((output_name.clone(), output))
+    }
+}
+
+pub(crate) struct Where;
+impl OnnxOp for Where {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Where
+        let cond = node.get_input(0)?;
+        let a = node.get_input(1)?;
+        let b = node.get_input(2)?;
+
+        // where_cond requires that all inputs are the same shape.
+        // In contrast, the Where op in ONNX only requires that they are broadcastable.
+        let shape = broadcast_shape_from_many(&[cond.dims(), a.dims(), b.dims()])?;
+        let cond = cond.broadcast_as(shape.clone())?;
+        let a = a.broadcast_as(shape.clone())?;
+        let b = b.broadcast_as(shape)?;
+        let output = cond.where_cond(&a, &b)?;
+
         let output_name = node.get_output(0)?;
 
         Ok((output_name.clone(), output))
