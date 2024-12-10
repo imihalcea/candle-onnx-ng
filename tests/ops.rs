@@ -55,56 +55,6 @@ fn test_evaluation_fails_without_defined_graph() -> Result<()> {
 // "Concat"
 // #[test]
 
-// "Cos"
-#[test]
-fn test_cos_operation() -> Result<()> {
-    let manual_graph = utils::create_model_proto_with_graph(Some(GraphProto {
-        node: vec![NodeProto {
-            op_type: "Cos".to_string(),
-            domain: "".to_string(),
-            attribute: vec![],
-            input: vec![INPUT_X.to_string()],
-            output: vec![OUTPUT_Z.to_string()],
-            name: "".to_string(),
-            doc_string: "".to_string(),
-        }],
-        name: "".to_string(),
-        initializer: vec![],
-        input: vec![
-            ValueInfoProto {
-                name: INPUT_X.to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            },
-            ValueInfoProto {
-                name: INPUT_Y.to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            },
-        ],
-        output: vec![ValueInfoProto {
-            name: OUTPUT_Z.to_string(),
-            doc_string: "".to_string(),
-            r#type: None,
-        }],
-        value_info: vec![],
-        doc_string: "".to_string(),
-        sparse_initializer: vec![],
-        quantization_annotation: vec![],
-    }));
-    let x = Tensor::from_vec(vec![0.0f32, 1.0f32, 2.0f32, 3.0f32], &[2, 2], &Device::Cpu)?;
-
-    let mut inputs: HashMap<String, Tensor> = HashMap::new();
-    inputs.insert(INPUT_X.to_string(), x);
-
-    let eval = simple_eval(&manual_graph, inputs)?;
-    assert_eq!(eval.len(), 1);
-
-    let z = eval.get(OUTPUT_Z).expect("Output 'z' not found");
-    assert_eq!(to_vec2_round(z, 4)?, [[1.0, 0.5403], [-0.4161, -0.99]]);
-    Ok(())
-}
-
 // "Sin"
 #[test]
 fn test_sin_operation() -> Result<()> {

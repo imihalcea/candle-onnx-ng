@@ -156,3 +156,15 @@ impl OnnxOp for Abs {
         Ok((output_name.clone(), output))
     }
 }
+
+pub(crate) struct Cos;
+
+impl OnnxOp for Cos {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Abs
+        let input = node.get_input(0)?;
+        let output = input.cos()?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}

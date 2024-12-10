@@ -23,6 +23,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Clip", Box::new(clip::Clip))?;
     registry.insert("Sqrt", Box::new(sqrt::Sqrt))?;
     registry.insert("Log", Box::new(basics::Log))?;
+    registry.insert("Cos", Box::new(basics::Cos))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;
