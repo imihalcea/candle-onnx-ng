@@ -1,7 +1,7 @@
 use crate::ops::compute_node::ComputeNode;
+use crate::ops::tensor_helper::broadcast_shape_from_many;
 use crate::ops::{OnnxOp, OnnxOpError, OpOutput};
 use candle_core::DType;
-use crate::ops::tensor_helper::{broadcast_shape_from_many};
 
 pub(crate) struct Add;
 impl OnnxOp for Add {
@@ -142,6 +142,17 @@ impl OnnxOp for Where {
 
         let output_name = node.get_output(0)?;
 
+        Ok((output_name.clone(), output))
+    }
+}
+
+pub(crate) struct Abs;
+impl OnnxOp for Abs {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Abs
+        let input = node.get_input(0)?;
+        let output = input.abs()?;
+        let output_name = node.get_output(0)?;
         Ok((output_name.clone(), output))
     }
 }

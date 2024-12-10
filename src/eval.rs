@@ -114,11 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Abs" => {
-                let input = get(&node.input[0])?;
-                let output = input.abs()?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Cos" => {
                 let input = get(&node.input[0])?;
                 let output = input.cos()?;
@@ -1170,4 +1165,3 @@ fn broadcast_shape(shape_a: &[usize], shape_b: &[usize]) -> Result<Vec<usize>> {
     }
     Ok(target_shape)
 }
-
