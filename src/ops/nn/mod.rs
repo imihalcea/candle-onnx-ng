@@ -23,6 +23,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
 
     registry.insert("Sigmoid", Box::new(basics::Sigmoid))?;
     registry.insert("Gelu", Box::new(basics::Gelu))?;
+    registry.insert("Relu", Box::new(basics::Relu))?;
 
     Ok(())
 }
