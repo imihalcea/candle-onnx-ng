@@ -193,7 +193,6 @@ impl OnnxOp for Neg {
     }
 }
 
-
 pub(crate) struct Erf;
 
 impl OnnxOp for Erf {

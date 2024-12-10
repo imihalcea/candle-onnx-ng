@@ -698,7 +698,6 @@ fn test_neg_operation() -> candle_core::Result<()> {
     Ok(())
 }
 
-
 #[test]
 fn test_erf_operation() -> candle_core::Result<()> {
     let manual_graph = utils::create_model_proto_with_graph(Some(GraphProto {
@@ -713,13 +712,11 @@ fn test_erf_operation() -> candle_core::Result<()> {
         }],
         name: "".to_string(),
         initializer: vec![],
-        input: vec![
-            ValueInfoProto {
-                name: "INPUT_X".to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            }
-        ],
+        input: vec![ValueInfoProto {
+            name: "INPUT_X".to_string(),
+            doc_string: "".to_string(),
+            r#type: None,
+        }],
         output: vec![ValueInfoProto {
             name: "OUTPUT_Z".to_string(),
             doc_string: "".to_string(),
@@ -742,7 +739,10 @@ fn test_erf_operation() -> candle_core::Result<()> {
 
     let results = z.to_vec2::<f32>()?;
 
-    assert_eq!(results, vec![vec![0.8427008, 0.9953223], vec![0.9999779, 1.0]]);
+    assert_eq!(
+        results,
+        vec![vec![0.8427008, 0.9953223], vec![0.9999779, 1.0]]
+    );
 
     Ok(())
 }
@@ -761,13 +761,11 @@ fn test_tanh_operation() -> candle_core::Result<()> {
         }],
         name: "".to_string(),
         initializer: vec![],
-        input: vec![
-            ValueInfoProto {
-                name: "INPUT_X".to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            }
-        ],
+        input: vec![ValueInfoProto {
+            name: "INPUT_X".to_string(),
+            doc_string: "".to_string(),
+            r#type: None,
+        }],
         output: vec![ValueInfoProto {
             name: "OUTPUT_Z".to_string(),
             doc_string: "".to_string(),
