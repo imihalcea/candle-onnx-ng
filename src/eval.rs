@@ -114,11 +114,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            "Erf" => {
-                let input = get(&node.input[0])?;
-                let output = input.erf()?;
-                values.insert(node.output[0].clone(), output);
-            }
             "Tanh" => {
                 let input = get(&node.input[0])?;
                 let output = input.tanh()?;

@@ -192,3 +192,16 @@ impl OnnxOp for Neg {
         Ok((output_name.clone(), output))
     }
 }
+
+
+pub(crate) struct Erf;
+
+impl OnnxOp for Erf {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Neg
+        let input = node.get_input(0)?;
+        let output = input.erf()?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}
