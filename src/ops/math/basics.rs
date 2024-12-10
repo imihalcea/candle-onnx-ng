@@ -161,9 +161,21 @@ pub(crate) struct Cos;
 
 impl OnnxOp for Cos {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
-        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Abs
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Cos
         let input = node.get_input(0)?;
         let output = input.cos()?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}
+
+pub(crate) struct Sin;
+
+impl OnnxOp for Sin {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Sin
+        let input = node.get_input(0)?;
+        let output = input.sin()?;
         let output_name = node.get_output(0)?;
         Ok((output_name.clone(), output))
     }
