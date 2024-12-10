@@ -228,3 +228,16 @@ impl OnnxOp for Ceil {
         Ok((output_name.clone(), output))
     }
 }
+
+
+pub(crate) struct Floor;
+
+impl OnnxOp for Floor {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Floor
+        let input = node.get_input(0)?;
+        let output = input.floor()?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}

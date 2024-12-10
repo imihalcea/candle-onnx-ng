@@ -29,6 +29,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Erf", Box::new(basics::Erf))?;
     registry.insert("Tanh", Box::new(basics::Tanh))?;
     registry.insert("Ceil", Box::new(basics::Ceil))?;
+    registry.insert("Floor", Box::new(basics::Floor))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;
