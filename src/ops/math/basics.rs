@@ -216,3 +216,15 @@ impl OnnxOp for Tanh {
         Ok((output_name.clone(), output))
     }
 }
+
+pub(crate) struct Ceil;
+
+impl OnnxOp for Ceil {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Ceil
+        let input = node.get_input(0)?;
+        let output = input.ceil()?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}
