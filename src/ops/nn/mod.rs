@@ -1,11 +1,11 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod avgpool;
+mod basics;
 mod batchnorm;
 mod conv;
 mod dropout;
 mod maxpool;
 mod softmax;
-mod basics;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("LogSoftmax", Box::new(softmax::LogSoftmax))?;
@@ -22,6 +22,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Conv", Box::new(conv::Conv))?;
 
     registry.insert("Sigmoid", Box::new(basics::Sigmoid))?;
+    registry.insert("Gelu", Box::new(basics::Gelu))?;
 
     Ok(())
 }
