@@ -1,4 +1,3 @@
-use crate::onnx::attribute_proto::AttributeType;
 use crate::onnx::tensor_proto::DataType;
 use crate::onnx::{self, GraphProto};
 use crate::ops::{registry, ComputeNode};
@@ -114,25 +113,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Constant
-            "Constant" => {
-                let value = match node.attribute.iter().find(|attr| attr.name == "value") {
-                    None => {
-                        // TODO: support sparse_value etc.
-                        bail!("cannot find 'value' attr in 'Constant' for {}", node.name)
-                    }
-                    Some(value) => value,
-                };
-                let output = match value.r#type() {
-                    AttributeType::Tensor => {
-                        let t = value.t.as_ref().unwrap();
-                        parser::get_tensor(t, &node.name)?
-                    }
-                    rtype => bail!("unsupported 'value' type {rtype:?} for {}", node.name),
-                };
-
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Cast
             "Cast" => {
                 let input = get(&node.input[0])?;

@@ -78,4 +78,8 @@ impl<'a> ComputeNode<'a> {
             .map(|s| self.context.get(s))
             .flatten()
     }
+
+    pub(crate) fn get_attr_definition(&self, name: &str) -> Option<&crate::onnx::AttributeProto> {
+        parser::get_attr_definition(&self.node_proto, name)
+    }
 }

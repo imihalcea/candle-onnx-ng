@@ -1569,7 +1569,6 @@ fn test_random_normal() -> Result<()> {
     Ok(())
 }
 
-
 // "ArgMin"
 #[test]
 fn test_argmin() -> Result<()> {

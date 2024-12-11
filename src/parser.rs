@@ -175,6 +175,13 @@ pub fn get_attr_opt<'a, T: Attr + ?Sized>(
     }
 }
 
+pub fn get_attr_definition<'a>(
+    node: &'a onnx::NodeProto,
+    name: &str,
+) -> Option<&'a onnx::AttributeProto> {
+    node.attribute.iter().find(|attr| attr.name == name)
+}
+
 pub fn get_attr_opt_owned<T: AttrOwned>(
     node: &onnx::NodeProto,
     name: &str,

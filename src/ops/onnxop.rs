@@ -10,6 +10,7 @@ pub type OpOutput = (String, candle::Tensor);
 pub enum OnnxOpError {
     InvalidInput(String),
     InvalidOutput(String),
+    InvalidAttribute(String),
     ComputationFailed(String),
     UnsupportedOp(String),
     DuplicateOp(String),
@@ -33,6 +34,7 @@ impl Display for OnnxOpError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             OnnxOpError::InvalidInput(s) => write!(f, "Invalid input: {}", s),
+            OnnxOpError::InvalidAttribute(s) => write!(f, "Invalid attribute: {}", s),
             OnnxOpError::InvalidOutput(s) => write!(f, "Invalid output: {}", s),
             OnnxOpError::ComputationFailed(s) => write!(f, "Computation failed: {}", s),
             OnnxOpError::UnsupportedOp(s) => write!(f, "Unsupported op: {}", s),
