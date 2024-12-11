@@ -64,8 +64,6 @@ fn test_evaluation_fails_without_defined_graph() -> Result<()> {
 // "Cast"
 // #[test]
 
-
-
 // "ReduceMean"
 #[test]
 fn test_reduce_mean() -> Result<()> {

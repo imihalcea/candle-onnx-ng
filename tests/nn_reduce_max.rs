@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 mod utils;
 
-
 // "ReduceMax"
 #[test]
 fn test_reduce_max() -> Result<()> {
@@ -342,7 +341,7 @@ fn test_reduce_max() -> Result<()> {
         &[[[60.]]],
         false
     )
-        .is_err());
+    .is_err());
 
     // Negative test - expect error
     // Should error out on empty set
