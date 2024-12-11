@@ -191,3 +191,34 @@ impl OnnxOp for ReduceMax {
         Ok((output_name.clone(), output))
     }
 }
+
+pub(crate) struct ReduceMean;
+
+impl OnnxOp for ReduceMean {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        // https://onnx.ai/onnx/operators/onnx__ReduceMean.html#reducemean-13
+        // TODO: This version is only compatible with ReduceMean V13 and below.
+
+        let input = node.get_input(0)?;
+        let axes = node.get_attr_opt::<[i64]>("axes")?;
+        let keepdims = node.get_attr_opt::<i64>("keepdims")?.copied().unwrap_or(1);
+
+        let n_dims = input.dims().len();
+
+        let axes: Vec<usize> = if let Some(axes) = axes {
+            axes.iter()
+                .map(|e| (if e < &0 { (n_dims as i64) + *e } else { *e }) as usize)
+                .collect()
+        } else {
+            (0..n_dims).collect()
+        };
+        let output = if keepdims == 1 {
+            input.mean_keepdim(axes)?
+        } else {
+            input.mean(axes)?
+        };
+
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}
