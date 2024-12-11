@@ -1,17 +1,14 @@
-use std::collections::HashSet;
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
+use std::collections::HashSet;
 
 pub(crate) struct ReduceMin;
 impl OnnxOp for ReduceMin {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
         // https://onnx.ai/onnx/operators/onnx__ReduceMin.html#reducemin
-        
+
         let input = node.get_input(0)?;
         let axes = node.get_opt(1);
-        let keepdims = node.get_attr_opt::<i64>("keepdims")?
-            .copied()
-            .unwrap_or(1)
-            == 1;
+        let keepdims = node.get_attr_opt::<i64>("keepdims")?.copied().unwrap_or(1) == 1;
 
         let axes = if let Some(axes) = axes {
             // Satisfies version 18+
@@ -80,9 +77,7 @@ impl OnnxOp for ReduceMin {
         } else {
             // If `axes` is empty and `noop_with_empty_axes` is set to `true (1)`
             // ""input tensor will not be reduced,and the output tensor would be equivalent to input tensor.""
-            if node.get_attr_opt::<i64>("noop_with_empty_axes")?.copied()
-                == Some(1)
-            {
+            if node.get_attr_opt::<i64>("noop_with_empty_axes")?.copied() == Some(1) {
                 input.clone()
             } else {
                 let mut result = input.flatten_all()?;

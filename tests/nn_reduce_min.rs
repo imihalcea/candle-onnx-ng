@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use candle_core::{DType, Device, NdArray, Tensor, Result};
+use candle_core::{DType, Device, NdArray, Result, Tensor};
 use candle_onnx_ng::onnx::{AttributeProto, GraphProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
+use std::collections::HashMap;
 
 mod utils;
 // "ReduceMin"
@@ -340,7 +340,7 @@ fn test_reduce_min() -> candle_core::Result<()> {
         &[0.],
         false
     )
-        .is_err());
+    .is_err());
 
     // Negative test - expect error
     // Should error out on empty set

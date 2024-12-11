@@ -3,6 +3,7 @@ use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
 use crate::parser;
 
 pub(crate) struct Constant;
+
 impl OnnxOp for Constant {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
         let value = match node.get_attr_definition("value") {

@@ -5,8 +5,8 @@ mod batchnorm;
 mod conv;
 mod dropout;
 mod maxpool;
-mod softmax;
 mod reduce;
+mod softmax;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("LogSoftmax", Box::new(softmax::LogSoftmax))?;

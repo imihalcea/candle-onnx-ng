@@ -583,8 +583,6 @@ fn test_reduce_max() -> Result<()> {
     Ok(())
 }
 
-
-
 // "ReduceMean"
 #[test]
 fn test_reduce_mean() -> Result<()> {
