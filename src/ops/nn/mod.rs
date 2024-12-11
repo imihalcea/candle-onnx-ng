@@ -26,6 +26,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Gelu", Box::new(basics::Gelu))?;
     registry.insert("Relu", Box::new(basics::Relu))?;
     registry.insert("ReduceMin", Box::new(reduce::ReduceMin))?;
+    registry.insert("ReduceMax", Box::new(reduce::ReduceMax))?;
 
     Ok(())
 }
