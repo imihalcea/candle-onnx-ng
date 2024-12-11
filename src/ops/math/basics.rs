@@ -229,7 +229,6 @@ impl OnnxOp for Ceil {
     }
 }
 
-
 pub(crate) struct Floor;
 
 impl OnnxOp for Floor {
