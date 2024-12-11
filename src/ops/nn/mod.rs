@@ -6,6 +6,7 @@ mod conv;
 mod dropout;
 mod maxpool;
 mod softmax;
+mod reduce;
 
 pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError> {
     registry.insert("LogSoftmax", Box::new(softmax::LogSoftmax))?;
@@ -24,6 +25,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Sigmoid", Box::new(basics::Sigmoid))?;
     registry.insert("Gelu", Box::new(basics::Gelu))?;
     registry.insert("Relu", Box::new(basics::Relu))?;
+    registry.insert("ReduceMin", Box::new(reduce::ReduceMin))?;
 
     Ok(())
 }
