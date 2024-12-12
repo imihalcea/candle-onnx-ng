@@ -28,6 +28,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("ReduceMin", Box::new(reduce::ReduceMin))?;
     registry.insert("ReduceMax", Box::new(reduce::ReduceMax))?;
     registry.insert("ReduceMean", Box::new(reduce::ReduceMean))?;
+    registry.insert("ReduceSum", Box::new(reduce::ReduceSum))?;
 
     Ok(())
 }

@@ -222,3 +222,43 @@ impl OnnxOp for ReduceMean {
         Ok((output_name.clone(), output))
     }
 }
+
+pub(crate) struct ReduceSum;
+
+impl OnnxOp for ReduceSum {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        //https://github.com/onnx/onnx/blob/main/docs/Operators.md#ReduceSum
+        // Version 13 impl
+        let input = node.get_input(0)?;
+        let axes = node.get_opt(1);
+        let keepdims = node.get_attr_opt::<i64>("keepdims")?.copied().unwrap_or(1);
+        let noop_with_empty_axes = node
+            .get_attr_opt::<i64>("noop_with_empty_axes")?
+            .copied()
+            .unwrap_or(0);
+
+        let axes = match axes {
+            Some(axes) => axes
+                .to_vec1::<i64>()?
+                .into_iter()
+                .map(|x| x as usize)
+                .collect::<Vec<_>>(),
+            None => {
+                if noop_with_empty_axes == 1 {
+                    vec![]
+                } else {
+                    (0..input.rank()).collect()
+                }
+            }
+        };
+
+        let output = if keepdims == 1 {
+            input.sum_keepdim(axes)?
+        } else {
+            input.sum(axes)?
+        };
+
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), output))
+    }
+}
