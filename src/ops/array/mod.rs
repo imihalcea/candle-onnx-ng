@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
+mod cast;
 mod concat;
 mod constant;
 mod constshape;
@@ -27,5 +28,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Range", Box::new(range::Range))?;
     registry.insert("Concat", Box::new(concat::Concat))?;
     registry.insert("Constant", Box::new(constant::Constant))?;
+    registry.insert("Cast", Box::new(cast::Cast))?;
     Ok(())
 }

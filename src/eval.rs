@@ -113,25 +113,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Cast
-            "Cast" => {
-                let input = get(&node.input[0])?;
-                let dt: i64 = *parser::get_attr(node, "to")?;
-                let dtype = match DataType::try_from(dt as i32) {
-                    Ok(DataType::Int32) => DType::I64,
-                    Ok(dt) => match parser::dtype(dt) {
-                        Some(dt) => dt,
-                        None => {
-                            bail!("unsupported 'to' value {dt:?} for cast {}", node.name)
-                        }
-                    },
-                    Err(_) => {
-                        bail!("unsupported 'to' value {dt:?} for cast {}", node.name)
-                    }
-                };
-                let output = input.to_dtype(dtype)?;
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#CumSum
             "CumSum" => {
                 let exclusive = parser::get_attr_opt::<i64>(node, "exclusive")?
