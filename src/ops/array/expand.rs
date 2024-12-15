@@ -1,6 +1,5 @@
 use crate::ops::tensor_helper::broadcast_shape;
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
-use candle_core::{DType, Tensor};
 
 pub(crate) struct Expand;
 

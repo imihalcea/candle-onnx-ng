@@ -1,5 +1,6 @@
 use crate::ops::{OnnxOpError, OnnxOpRegistry};
 
+mod arg;
 mod cast;
 mod concat;
 mod constant;
@@ -35,5 +36,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Pad", Box::new(pad::Pad))?;
     registry.insert("Slice", Box::new(slice::Slice))?;
     registry.insert("Expand", Box::new(expand::Expand))?;
+    registry.insert("ArgMin", Box::new(arg::ArgMin))?;
     Ok(())
 }

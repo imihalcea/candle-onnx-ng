@@ -300,36 +300,7 @@ fn simple_eval_(
                 };
                 values.insert(node.output[0].clone(), output);
             }
-            "ArgMin" => {
-                let input = get(&node.input[0])?;
-                let axis_i64: i64 = parser::get_attr_opt(node, "axis")?.copied().unwrap_or(0);
-                let rank_i64: i64 = input.rank().try_into().unwrap();
-                if axis_i64 < -rank_i64 || axis_i64 >= rank_i64 {
-                    bail!(
-                        "axis ({}) out of accepted range [-rank, rank-1] which was [{}, {}]",
-                        axis_i64,
-                        -rank_i64,
-                        rank_i64 - 1
-                    )
-                }
-                let axis = input.normalize_axis(axis_i64)?;
-                let keepdims: i64 = parser::get_attr_opt(node, "keepdims")?
-                    .copied()
-                    .unwrap_or(1);
-                let select_last_index: i64 = parser::get_attr_opt(node, "select_last_index")?
-                    .copied()
-                    .unwrap_or(0);
-                if select_last_index == 1 {
-                    bail!("select_last_index for ArgMin is currently not supported")
-                }
-                let output = if keepdims == 1 {
-                    input.argmin_keepdim(axis)?
-                } else {
-                    input.argmin(axis)?
-                }
-                .to_dtype(DType::I64)?;
-                values.insert(node.output[0].clone(), output);
-            }
+
             "ArgMax" => {
                 let input = get(&node.input[0])?;
                 let axis_i64: i64 = parser::get_attr_opt(node, "axis")?.copied().unwrap_or(0);
@@ -649,26 +620,4 @@ fn simple_eval_(
             Some(value) => Ok((output.name.clone(), value)),
         })
         .collect()
-}
-
-fn broadcast_shape(shape_a: &[usize], shape_b: &[usize]) -> Result<Vec<usize>> {
-    let (longest, shortest) = if shape_a.len() > shape_b.len() {
-        (shape_a, shape_b)
-    } else {
-        (shape_b, shape_a)
-    };
-    let diff = longest.len() - shortest.len();
-    let mut target_shape = longest[0..diff].to_vec();
-    for (dim1, dim2) in longest[diff..].iter().zip(shortest.iter()) {
-        if *dim1 == *dim2 || *dim2 == 1 || *dim1 == 1 {
-            target_shape.push(usize::max(*dim1, *dim2));
-        } else {
-            bail!(
-                "Expand: incompatible shapes for broadcast, {:?} and {:?}",
-                shape_a,
-                shape_b
-            );
-        }
-    }
-    Ok(target_shape)
 }
