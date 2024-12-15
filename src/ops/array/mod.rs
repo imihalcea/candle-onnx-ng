@@ -11,6 +11,7 @@ mod range;
 mod reshape;
 mod shape;
 mod size;
+mod slice;
 mod squeeze;
 mod transpose;
 mod unsqueeze;
@@ -31,5 +32,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Constant", Box::new(constant::Constant))?;
     registry.insert("Cast", Box::new(cast::Cast))?;
     registry.insert("Pad", Box::new(pad::Pad))?;
+    registry.insert("Slice", Box::new(slice::Slice))?;
     Ok(())
 }
