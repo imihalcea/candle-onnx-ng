@@ -6,6 +6,7 @@ mod constant;
 mod constshape;
 mod flatten;
 mod gather;
+mod pad;
 mod range;
 mod reshape;
 mod shape;
@@ -29,5 +30,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Concat", Box::new(concat::Concat))?;
     registry.insert("Constant", Box::new(constant::Constant))?;
     registry.insert("Cast", Box::new(cast::Cast))?;
+    registry.insert("Pad", Box::new(pad::Pad))?;
     Ok(())
 }
