@@ -25,6 +25,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Sigmoid", Box::new(basics::Sigmoid))?;
     registry.insert("Gelu", Box::new(basics::Gelu))?;
     registry.insert("Relu", Box::new(basics::Relu))?;
+    registry.insert("LeakyRelu", Box::new(basics::LeakyRelu))?;
     registry.insert("ReduceMin", Box::new(reduce::ReduceMin))?;
     registry.insert("ReduceMax", Box::new(reduce::ReduceMax))?;
     registry.insert("ReduceMean", Box::new(reduce::ReduceMean))?;
