@@ -134,11 +134,6 @@ fn simple_eval_(
                 let output = input.cumsum(axis as usize)?;
                 values.insert(node.output[0].clone(), output);
             }
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#identity
-            "Identity" => {
-                let input = get(&node.input[0])?;
-                values.insert(node.output[0].clone(), input.clone());
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#if
             "If" => {
                 // protobuf encodes boolean false as 0 and true as 1

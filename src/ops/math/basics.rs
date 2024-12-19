@@ -240,3 +240,13 @@ impl OnnxOp for Floor {
         Ok((output_name.clone(), output))
     }
 }
+
+pub(crate) struct Identity;
+
+impl OnnxOp for Identity {
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        let input = node.get_input(0)?;
+        let output_name = node.get_output(0)?;
+        Ok((output_name.clone(), input.clone()))
+    }
+}

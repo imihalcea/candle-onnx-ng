@@ -12,6 +12,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Less", Box::new(cmp::Less))?;
 
     //basics
+    registry.insert("Identity", Box::new(basics::Identity))?;
     registry.insert("Abs", Box::new(basics::Abs))?;
     registry.insert("Add", Box::new(basics::Add))?;
     registry.insert("Sub", Box::new(basics::Sub))?;
