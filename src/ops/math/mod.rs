@@ -2,6 +2,7 @@ use crate::ops::{OnnxOpError, OnnxOpRegistry};
 mod basics;
 mod clip;
 mod cmp;
+mod cumsum;
 mod matmul;
 mod sqrt;
 
@@ -31,6 +32,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Tanh", Box::new(basics::Tanh))?;
     registry.insert("Ceil", Box::new(basics::Ceil))?;
     registry.insert("Floor", Box::new(basics::Floor))?;
+    registry.insert("CumSum", Box::new(cumsum::CumSum))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;

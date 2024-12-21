@@ -113,27 +113,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#CumSum
-            "CumSum" => {
-                let exclusive = parser::get_attr_opt::<i64>(node, "exclusive")?
-                    .copied()
-                    .unwrap_or(0);
-                let reverse = parser::get_attr_opt::<i64>(node, "reverse")?
-                    .copied()
-                    .unwrap_or(0);
-                if exclusive != 0 {
-                    bail!("only exclusive == 0 is supported in CumSum")
-                }
-                if reverse != 0 {
-                    bail!("only reverse == 0 is supported in CumSum")
-                }
-                let input = get(&node.input[0])?;
-                let axis = get(&node.input[1])?
-                    .to_dtype(DType::U32)?
-                    .to_vec0::<u32>()?;
-                let output = input.cumsum(axis as usize)?;
-                values.insert(node.output[0].clone(), output);
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#if
             "If" => {
                 // protobuf encodes boolean false as 0 and true as 1
