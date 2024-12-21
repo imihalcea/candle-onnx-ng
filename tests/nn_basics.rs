@@ -159,7 +159,11 @@ fn test_leakyrelu() -> candle_core::Result<()> {
     // tests from https://github.com/onnx/onnx/blob/main/docs/Operators.md#examples-80
     // leakyrelu
     test(&[-1.0, 0.0, 1.0], Some(0.1), &[-0.1, 0.0, 1.0])?;
-    fn test(data: impl NdArray, alpha: Option<f32>, expected: impl NdArray) -> candle_core::Result<()> {
+    fn test(
+        data: impl NdArray,
+        alpha: Option<f32>,
+        expected: impl NdArray,
+    ) -> candle_core::Result<()> {
         let att_alpha = AttributeProto {
             name: "alpha".to_string(),
             ref_attr_name: "alpha".to_string(),

@@ -1,6 +1,7 @@
 use candle_core::test_utils::to_vec2_round;
 use candle_core::{DType, Device, NdArray, Tensor};
-use candle_onnx_ng::onnx::{GraphProto, NodeProto, ValueInfoProto};
+use candle_onnx_ng::onnx::attribute_proto::AttributeType;
+use candle_onnx_ng::onnx::{AttributeProto, GraphProto, ModelProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
 use std::collections::HashMap;
 
@@ -948,7 +949,6 @@ fn test_floor() -> candle_core::Result<()> {
     Ok(())
 }
 
-
 #[test]
 fn test_identity_operation() -> candle_core::Result<()> {
     let manual_graph = utils::create_model_proto_with_graph(Some(GraphProto {
@@ -963,13 +963,11 @@ fn test_identity_operation() -> candle_core::Result<()> {
         }],
         name: "".to_string(),
         initializer: vec![],
-        input: vec![
-            ValueInfoProto {
-                name: "INPUT_X".to_string(),
-                doc_string: "".to_string(),
-                r#type: None,
-            },
-        ],
+        input: vec![ValueInfoProto {
+            name: "INPUT_X".to_string(),
+            doc_string: "".to_string(),
+            r#type: None,
+        }],
         output: vec![ValueInfoProto {
             name: "OUTPUT_Z".to_string(),
             doc_string: "".to_string(),
