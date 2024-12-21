@@ -3,6 +3,7 @@ mod basics;
 mod clip;
 mod cmp;
 mod cumsum;
+mod gemm;
 mod matmul;
 mod sqrt;
 
@@ -33,6 +34,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Ceil", Box::new(basics::Ceil))?;
     registry.insert("Floor", Box::new(basics::Floor))?;
     registry.insert("CumSum", Box::new(cumsum::CumSum))?;
+    registry.insert("Gemm", Box::new(gemm::Gemm))?;
 
     //matrix
     registry.insert("MatMul", Box::new(matmul::MatMul))?;

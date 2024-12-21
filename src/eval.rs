@@ -275,38 +275,6 @@ fn simple_eval_(
                 values.insert(node.output[0].clone(), output);
             }
 
-            // https://github.com/onnx/onnx/blob/main/docs/Operators.md#Gemm
-            "Gemm" => {
-                let a = get(&node.input[0])?;
-                let b = get(&node.input[1])?;
-                let c = get(&node.input[2])?;
-
-                let alpha = parser::get_attr_opt::<f32>(node, "alpha")?
-                    .copied()
-                    .unwrap_or(1.0);
-                let beta = parser::get_attr_opt::<f32>(node, "beta")?
-                    .copied()
-                    .unwrap_or(1.0);
-
-                let alpha = Tensor::full(alpha, a.shape(), &Device::Cpu)?;
-                let beta = Tensor::full(beta, c.shape(), &Device::Cpu)?;
-
-                let trans_a = parser::get_attr_opt::<i64>(node, "transA")?
-                    .copied()
-                    .unwrap_or(0);
-                let trans_b = parser::get_attr_opt::<i64>(node, "transB")?
-                    .copied()
-                    .unwrap_or(0);
-
-                let a = if trans_a == 0 { a.clone() } else { a.t()? };
-                let b = if trans_b == 0 { b.clone() } else { b.t()? };
-
-                let output = a
-                    .broadcast_mul(&alpha)?
-                    .broadcast_matmul(&b)?
-                    .broadcast_add(&c.broadcast_mul(&beta)?)?;
-                values.insert(node.output[0].clone(), output);
-            }
             "LSTM" => {
                 let direction = parser::get_attr_opt(node, "direction")?.unwrap_or("forward");
                 if direction != "forward" {
