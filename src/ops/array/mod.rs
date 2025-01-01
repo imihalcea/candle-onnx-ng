@@ -14,6 +14,7 @@ mod reshape;
 mod shape;
 mod size;
 mod slice;
+mod split;
 mod squeeze;
 mod transpose;
 mod unsqueeze;
@@ -38,5 +39,6 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("Expand", Box::new(expand::Expand))?;
     registry.insert("ArgMin", Box::new(arg::ArgMin))?;
     registry.insert("ArgMax", Box::new(arg::ArgMax))?;
+    registry.insert("Split", Box::new(split::Split))?;
     Ok(())
 }

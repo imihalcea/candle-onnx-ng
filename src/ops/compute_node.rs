@@ -42,6 +42,10 @@ impl<'a> ComputeNode<'a> {
         self.node_proto.input.len()
     }
 
+    pub fn output_len(&self) -> usize {
+        self.node_proto.output.len()
+    }
+
     pub fn get_all_inputs(&self) -> Result<Vec<&Tensor>, OnnxOpError> {
         let inputs = (0..self.input_len())
             .map(|i| self.get_input(i))

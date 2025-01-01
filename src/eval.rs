@@ -139,57 +139,6 @@ fn simple_eval_(
                     );
                 }
             }
-            //https://github.com/onnx/onnx/blob/main/docs/Operators.md#Split
-            // Version 18 impl
-            "Split" => {
-                let input_tensor = get(&node.input[0])?;
-                let axis = parser::get_attr_opt::<i64>(node, "axis")?
-                    .copied()
-                    .unwrap_or(0);
-                let axis = input_tensor.normalize_axis(axis)?;
-
-                // Determine split sizes
-                let splits = if node.input.len() > 1 {
-                    // If the split tensor is provided, use it to determine sizes
-                    let split_tensor = get(&node.input[1])?.to_vec1::<i64>()?;
-                    split_tensor.iter().map(|&x| x as usize).collect::<Vec<_>>()
-                } else {
-                    let num_outputs = if let Some(&num_outputs_attrib) =
-                        parser::get_attr_opt::<i64>(node, "num_outputs")?
-                    {
-                        num_outputs_attrib as usize
-                    } else {
-                        node.output.len()
-                    };
-
-                    let input_dim = input_tensor.dim(axis)?;
-
-                    let mut split_sizes =
-                        vec![input_dim / num_outputs as usize; num_outputs as usize];
-                    let remainder = input_dim % num_outputs as usize;
-                    if remainder > 0 {
-                        // If there's a remainder, add it to the last split size
-                        split_sizes[num_outputs as usize - 1] += remainder;
-                    }
-
-                    split_sizes
-                };
-
-                // Perform the split operation
-                let mut outputs = vec![];
-                let mut start = 0;
-                for &size in &splits {
-                    let end = start + size;
-                    let slice = input_tensor.narrow(axis, start, size)?;
-                    outputs.push(slice);
-                    start = end;
-                }
-
-                // Insert the split outputs into the values map
-                for (output, slice) in node.output.iter().zip(outputs.into_iter()) {
-                    values.insert(output.clone(), slice);
-                }
-            }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#ReduceL2
             // Version 18 impl
             "ReduceL2" => {
