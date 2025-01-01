@@ -84,6 +84,6 @@ impl OnnxOp for Slice {
             out = out.index_select(&indexes, axis)?
         }
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), out))
+        Ok(OpOutput::Single(output_name.clone(), out))
     }
 }

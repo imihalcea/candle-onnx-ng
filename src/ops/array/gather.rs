@@ -47,7 +47,7 @@ impl OnnxOp for Gather {
         };
 
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), xs))
+        Ok(OpOutput::Single(output_name.clone(), xs))
     }
 }
 
@@ -102,6 +102,6 @@ impl OnnxOp for GatherElements {
         let output = data.gather(indices, axis)?;
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

@@ -38,6 +38,6 @@ impl OnnxOp for BatchNormalization {
         let output = xs.broadcast_mul(&weight)?.broadcast_add(&bias)?;
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

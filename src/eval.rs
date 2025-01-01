@@ -1,6 +1,6 @@
 use crate::onnx::tensor_proto::DataType;
 use crate::onnx::{self, GraphProto};
-use crate::ops::{registry, ComputeNode};
+use crate::ops::{registry, ComputeNode, OpOutput};
 use candle_core as candle;
 use candle_core::{bail, DType, Device, Result, Tensor};
 
@@ -501,8 +501,24 @@ fn simple_eval_(
             op_type => {
                 let onnx_op = registry.get(op_type)?;
                 let cn = ComputeNode::new(&node, values);
-                let (name, value) = onnx_op.eval(&cn)?;
-                values.insert(name, value);
+                let op_output = onnx_op.eval(&cn)?;
+                //match on the type of enum OpOutput
+                match op_output {
+                    OpOutput::Single(name, value) => {
+                        values.insert(name, value);
+                    }
+                    OpOutput::Multiple(outputs) => {
+                        for (name, value) in outputs {
+                            values.insert(name, value);
+                        }
+                    }
+                    OpOutput::Subgraph(graph) => {
+                        let subgraph_outputs = simple_eval_(graph.graph_proto, values)?;
+                        for (name, value) in subgraph_outputs {
+                            values.insert(name, value);
+                        }
+                    }
+                }
             }
         }
     }

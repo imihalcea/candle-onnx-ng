@@ -13,6 +13,6 @@ impl OnnxOp for ConstantOfShape {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), xs))
+        Ok(OpOutput::Single(output_name.clone(), xs))
     }
 }

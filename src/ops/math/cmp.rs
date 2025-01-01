@@ -9,7 +9,7 @@ impl OnnxOp for Equal {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -24,7 +24,7 @@ impl OnnxOp for Greater {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -39,6 +39,6 @@ impl OnnxOp for Less {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

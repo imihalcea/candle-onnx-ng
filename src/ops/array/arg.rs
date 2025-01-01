@@ -34,7 +34,7 @@ impl OnnxOp for ArgMin {
 
         let output_name = node.get_output(0)?.clone();
 
-        Ok((output_name, output))
+        Ok(OpOutput::Single(output_name, output))
     }
 }
 
@@ -72,6 +72,6 @@ impl OnnxOp for ArgMax {
         .to_dtype(DType::I64)?;
 
         let output_name = node.get_output(0)?.clone();
-        Ok((output_name, output))
+        Ok(OpOutput::Single(output_name, output))
     }
 }

@@ -53,7 +53,7 @@ impl OnnxOp for Pad {
                 }
 
                 let output_name = node.get_output(0)?;
-                Ok((output_name.clone(), out))
+                Ok(OpOutput::Single(output_name.clone(), out))
             }
             _ => {
                 let err_msg = format!(

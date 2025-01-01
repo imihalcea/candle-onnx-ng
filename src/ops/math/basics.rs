@@ -12,7 +12,7 @@ impl OnnxOp for Add {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -25,7 +25,7 @@ impl OnnxOp for Sub {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -38,7 +38,7 @@ impl OnnxOp for Mul {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -51,7 +51,7 @@ impl OnnxOp for Div {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -63,7 +63,7 @@ impl OnnxOp for Exp {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -78,10 +78,10 @@ impl OnnxOp for Pow {
         // so we use powf where we can, which *does* correctly handle negative base.
         if let Ok(exp) = (|| input1.to_dtype(DType::F64)?.to_scalar::<f64>())() {
             let output = input0.powf(exp)?;
-            Ok((output_name.clone(), output))
+            Ok(OpOutput::Single(output_name.clone(), output))
         } else {
             let output = input0.broadcast_pow(input1)?;
-            Ok((output_name.clone(), output))
+            Ok(OpOutput::Single(output_name.clone(), output))
         }
     }
 }
@@ -93,7 +93,7 @@ impl OnnxOp for Sign {
         let output = input.sign()?;
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -105,7 +105,7 @@ impl OnnxOp for Log {
         let output = input.log()?;
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -120,7 +120,7 @@ impl OnnxOp for Min {
         }
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -142,7 +142,7 @@ impl OnnxOp for Where {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -153,7 +153,7 @@ impl OnnxOp for Abs {
         let input = node.get_input(0)?;
         let output = input.abs()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -165,7 +165,7 @@ impl OnnxOp for Cos {
         let input = node.get_input(0)?;
         let output = input.cos()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -177,7 +177,7 @@ impl OnnxOp for Sin {
         let input = node.get_input(0)?;
         let output = input.sin()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -189,7 +189,7 @@ impl OnnxOp for Neg {
         let input = node.get_input(0)?;
         let output = input.neg()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -201,7 +201,7 @@ impl OnnxOp for Erf {
         let input = node.get_input(0)?;
         let output = input.erf()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -213,7 +213,7 @@ impl OnnxOp for Tanh {
         let input = node.get_input(0)?;
         let output = input.tanh()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -225,7 +225,7 @@ impl OnnxOp for Ceil {
         let input = node.get_input(0)?;
         let output = input.ceil()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -237,7 +237,7 @@ impl OnnxOp for Floor {
         let input = node.get_input(0)?;
         let output = input.floor()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -247,6 +247,6 @@ impl OnnxOp for Identity {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
         let input = node.get_input(0)?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), input.clone()))
+        Ok(OpOutput::Single(output_name.clone(), input.clone()))
     }
 }

@@ -13,7 +13,7 @@ impl OnnxOp for LogSoftmax {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -31,6 +31,6 @@ impl OnnxOp for Softmax {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

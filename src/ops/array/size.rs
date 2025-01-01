@@ -8,6 +8,6 @@ impl OnnxOp for Size {
         let size: usize = data.dims().iter().product();
         let output = Tensor::from_slice(&[size as i64], (), data.device())?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

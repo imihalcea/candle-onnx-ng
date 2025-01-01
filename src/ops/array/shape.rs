@@ -15,6 +15,6 @@ impl OnnxOp for Shape {
         }
         let dims = Tensor::from_vec(dims, xs.rank(), xs.device())?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), dims))
+        Ok(OpOutput::Single(output_name.clone(), dims))
     }
 }

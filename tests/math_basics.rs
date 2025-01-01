@@ -1,7 +1,6 @@
 use candle_core::test_utils::to_vec2_round;
 use candle_core::{DType, Device, NdArray, Tensor};
-use candle_onnx_ng::onnx::attribute_proto::AttributeType;
-use candle_onnx_ng::onnx::{AttributeProto, GraphProto, ModelProto, NodeProto, ValueInfoProto};
+use candle_onnx_ng::onnx::{GraphProto, NodeProto, ValueInfoProto};
 use candle_onnx_ng::simple_eval;
 use std::collections::HashMap;
 

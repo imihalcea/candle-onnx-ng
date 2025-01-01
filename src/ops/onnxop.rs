@@ -1,10 +1,15 @@
+use crate::ops::compute_node::ComputeGraph;
 use crate::ops::ComputeNode;
 use candle_core as candle;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-pub type OpOutput = (String, candle::Tensor);
+pub enum OpOutput<'a> {
+    Single(String, candle::Tensor),
+    Multiple(Vec<(String, candle::Tensor)>),
+    Subgraph(ComputeGraph<'a>),
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum OnnxOpError {
@@ -132,9 +137,9 @@ mod onnxop_registry_tests {
     struct DummyOp;
     impl OnnxOp for DummyOp {
         fn eval(&self, _node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
-            Ok((
+            Ok(OpOutput::Single(
                 "dummy".to_string(),
-                candle::Tensor::new(vec![1u8, 1], &Device::Cpu).unwrap(),
+                candle::Tensor::new(vec![1u8, 1], &Device::Cpu)?,
             ))
         }
     }

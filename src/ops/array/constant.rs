@@ -27,6 +27,6 @@ impl OnnxOp for Constant {
         };
 
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

@@ -33,6 +33,6 @@ impl OnnxOp for Expand {
         let expanded_tensor = input_tensor.broadcast_as(target_shape)?;
 
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), expanded_tensor))
+        Ok(OpOutput::Single(output_name.clone(), expanded_tensor))
     }
 }

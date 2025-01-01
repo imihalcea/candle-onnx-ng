@@ -9,7 +9,7 @@ impl OnnxOp for Sigmoid {
         let input = node.get_input(0)?;
         let output = candle_nn::ops::sigmoid(input)?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -21,7 +21,7 @@ impl OnnxOp for Gelu {
         let input = node.get_input(0)?;
         let output = input.gelu_erf()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -33,7 +33,7 @@ impl OnnxOp for Relu {
         let input = node.get_input(0)?;
         let output = input.relu()?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
 
@@ -58,6 +58,6 @@ impl OnnxOp for LeakyRelu {
         let output = candle_nn::ops::leaky_relu(input, alpha.into())?;
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }

@@ -10,7 +10,7 @@ impl OnnxOp for Xor {
         let out = a.broadcast_add(&b)?.eq(1_u8)?;
 
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), out))
+        Ok(OpOutput::Single(output_name.clone(), out))
     }
 }
 
@@ -22,6 +22,6 @@ impl OnnxOp for Not {
         let xs = node.get_input(0)?;
         let out = xs.eq(&xs.zeros_like()?)?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), out))
+        Ok(OpOutput::Single(output_name.clone(), out))
     }
 }

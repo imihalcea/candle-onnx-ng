@@ -1,4 +1,4 @@
-use crate::onnx::NodeProto;
+use crate::onnx::{GraphProto, NodeProto};
 use crate::ops::OnnxOpError;
 use crate::parser;
 use candle_core::Tensor;
@@ -8,6 +8,21 @@ use std::collections::HashMap;
 //The idea is not to use the NodeProto directly in the computation graph
 //On a longer term, this can lead to a more optimized representation of the computation graph.
 //For now, it is just a wrapper around the NodeProto and the context
+
+pub struct ComputeGraph<'a> {
+    pub(crate) graph_proto: &'a GraphProto,
+    pub(crate) context: &'a HashMap<String, Tensor>,
+}
+
+impl<'a> ComputeGraph<'a> {
+    pub fn new(graph_proto: &'a GraphProto, context: &'a HashMap<String, Tensor>) -> Self {
+        ComputeGraph {
+            graph_proto,
+            context,
+        }
+    }
+}
+
 pub struct ComputeNode<'a> {
     pub(crate) name: &'a str,
     node_proto: &'a NodeProto,

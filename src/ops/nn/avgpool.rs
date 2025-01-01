@@ -49,6 +49,6 @@ impl OnnxOp for AveragePool {
 
         let output_name = node.get_output(0)?;
 
-        Ok((output_name.clone(), ys))
+        Ok(OpOutput::Single(output_name.clone(), ys))
     }
 }

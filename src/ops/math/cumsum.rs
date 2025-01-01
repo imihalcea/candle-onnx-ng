@@ -21,6 +21,6 @@ impl OnnxOp for CumSum {
         let axis = node.get_input(1)?.to_dtype(DType::U32)?.to_vec0::<u32>()?;
         let output = input.cumsum(axis as usize)?;
         let output_name = node.get_output(0)?;
-        Ok((output_name.clone(), output))
+        Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
