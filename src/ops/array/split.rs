@@ -1,5 +1,4 @@
 use crate::ops::{ComputeNode, OnnxOp, OnnxOpError, OpOutput};
-use candle_core::{DType, Tensor};
 
 pub(crate) struct Split;
 
