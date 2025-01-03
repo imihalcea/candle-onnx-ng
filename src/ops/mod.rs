@@ -5,6 +5,7 @@ pub mod compute_node;
 pub use compute_node::ComputeNode;
 
 mod array;
+mod control;
 mod logic;
 mod math;
 mod nn;
@@ -17,5 +18,6 @@ pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     math::register(&mut registry)?;
     array::register(&mut registry)?;
     nn::register(&mut registry)?;
+    control::register(&mut registry)?;
     Ok(registry)
 }

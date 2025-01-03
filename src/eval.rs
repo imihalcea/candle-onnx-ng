@@ -114,31 +114,31 @@ fn simple_eval_(
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#if
-            "If" => {
-                // protobuf encodes boolean false as 0 and true as 1
-                let cond = get(&node.input[0])?.get(0)?.to_scalar::<u8>()?;
-                let attr_name = if cond != 0 {
-                    "then_branch"
-                } else {
-                    "else_branch"
-                };
-                let sub_graph = parser::get_attr::<GraphProto>(node, attr_name)?;
-                if sub_graph.output.len() != node.output.len() {
-                    bail!(
-                        "If node {:?} is malformed: branch outputs ({}) don't match node outputs ({})",
-                        node.name,
-                        sub_graph.output.len(),
-                        node.output.len()
-                    );
-                }
-                let branch_out = simple_eval_(sub_graph, values)?;
-                for (i, out) in node.output.iter().enumerate() {
-                    values.insert(
-                        out.clone(),
-                        branch_out.get(&sub_graph.output[i].name).unwrap().clone(),
-                    );
-                }
-            }
+            // "If" => {
+            //     // protobuf encodes boolean false as 0 and true as 1
+            //     let cond = get(&node.input[0])?.get(0)?.to_scalar::<u8>()?;
+            //     let attr_name = if cond != 0 {
+            //         "then_branch"
+            //     } else {
+            //         "else_branch"
+            //     };
+            //     let sub_graph = parser::get_attr::<GraphProto>(node, attr_name)?;
+            //     if sub_graph.output.len() != node.output.len() {
+            //         bail!(
+            //             "If node {:?} is malformed: branch outputs ({}) don't match node outputs ({})",
+            //             node.name,
+            //             sub_graph.output.len(),
+            //             node.output.len()
+            //         );
+            //     }
+            //     let branch_out = simple_eval_(sub_graph, values)?;
+            //     for (i, out) in node.output.iter().enumerate() {
+            //         values.insert(
+            //             out.clone(),
+            //             branch_out.get(&sub_graph.output[i].name).unwrap().clone(),
+            //         );
+            //     }
+            // }
             // https://github.com/onnx/onnx/blob/main/docs/Operators.md#ReduceL2
             // Version 18 impl
             "ReduceL2" => {
@@ -451,7 +451,6 @@ fn simple_eval_(
                 let onnx_op = registry.get(op_type)?;
                 let cn = ComputeNode::new(&node, values);
                 let op_output = onnx_op.eval(&cn)?;
-                //match on the type of enum OpOutput
                 match op_output {
                     OpOutput::Single(name, value) => {
                         values.insert(name, value);
@@ -461,10 +460,17 @@ fn simple_eval_(
                             values.insert(name, value);
                         }
                     }
-                    OpOutput::Subgraph(graph) => {
-                        let subgraph_outputs = simple_eval_(graph.graph_proto, values)?;
-                        for (name, value) in subgraph_outputs {
-                            values.insert(name, value);
+                    OpOutput::Branch(branch_name) => {
+                        let sub_graph = parser::get_attr::<GraphProto>(node, branch_name.as_str())?;
+                        let subgraph_outputs = simple_eval_(sub_graph, values)?;
+                        for (i, out) in node.output.iter().enumerate() {
+                            values.insert(
+                                out.clone(),
+                                subgraph_outputs
+                                    .get(&sub_graph.output[i].name)
+                                    .unwrap()
+                                    .clone(),
+                            );
                         }
                     }
                 }

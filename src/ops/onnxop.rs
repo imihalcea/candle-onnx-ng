@@ -1,14 +1,13 @@
-use crate::ops::compute_node::ComputeGraph;
 use crate::ops::ComputeNode;
 use candle_core as candle;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-pub enum OpOutput<'a> {
+pub enum OpOutput {
     Single(String, candle::Tensor),
     Multiple(Vec<(String, candle::Tensor)>),
-    Subgraph(ComputeGraph<'a>),
+    Branch(String),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -19,6 +18,7 @@ pub enum OnnxOpError {
     ComputationFailed(String),
     UnsupportedOp(String),
     DuplicateOp(String),
+    MalformedOp(String),
     UnsupportedType(String),
     UnsupportedAttribute(String),
 }
@@ -43,6 +43,7 @@ impl Display for OnnxOpError {
             OnnxOpError::InvalidOutput(s) => write!(f, "Invalid output: {}", s),
             OnnxOpError::ComputationFailed(s) => write!(f, "Computation failed: {}", s),
             OnnxOpError::UnsupportedOp(s) => write!(f, "Unsupported op: {}", s),
+            OnnxOpError::MalformedOp(s) => write!(f, "Malformed op: {}", s),
             OnnxOpError::DuplicateOp(s) => write!(f, "Duplicate op: {}", s),
             OnnxOpError::UnsupportedType(s) => write!(f, "Unsupported type: {}", s),
             OnnxOpError::UnsupportedAttribute(s) => write!(f, "Unsupported attribute: {}", s),
