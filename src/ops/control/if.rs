@@ -5,6 +5,7 @@ pub(crate) struct If;
 
 impl OnnxOp for If {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        //https://github.com/onnx/onnx/blob/main/docs/Operators.md#if
         // protobuf encodes boolean false as 0 and true as 1
         let cond = node.get_input(0)?.get(0)?.to_scalar::<u8>()?;
         let attr_name = if cond != 0 {
