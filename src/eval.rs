@@ -24,7 +24,7 @@ pub fn simple_eval(
 }
 
 fn simple_eval_(
-    graph: &onnx::GraphProto,
+    graph: &GraphProto,
     values: &mut HashMap<String, Value>,
 ) -> Result<HashMap<String, Value>> {
     for t in graph.initializer.iter() {
@@ -99,17 +99,6 @@ fn simple_eval_(
     let registry = registry()?;
     // The nodes are topologically sorted so we can just process them in order.
     for node in graph.node.iter() {
-        let get = |input_name: &str| match values.get(input_name) {
-            Some(value) => Ok(value),
-            None => bail!("cannot find {input_name} for op '{}'", node.name),
-        };
-        let get_opt = |i: usize| {
-            node.input
-                .get(i)
-                .filter(|s: &&String| !s.is_empty())
-                .map(|s| get(s))
-        };
-
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
             op_type => {

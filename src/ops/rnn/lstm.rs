@@ -7,31 +7,37 @@ impl OnnxOp for Lstm {
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
         let direction = node.get_attr_opt("direction")?.unwrap_or("forward");
         if direction != "forward" {
-            return Err(OnnxOpError::UnsupportedAttribute("LSTM currently only supports direction == \"forward\"".to_string()))
+            return Err(OnnxOpError::UnsupportedAttribute(
+                "LSTM currently only supports direction == \"forward\"".to_string(),
+            ));
         }
         let num_directions = if direction == "bidirectional" { 2 } else { 1 };
         let hidden_size: i64 = node.get_attr("hidden_size").copied()?;
-        let input_forget = node.get_attr_opt("input_forget")?
-            .copied()
-            .unwrap_or(0);
+        let input_forget = node.get_attr_opt("input_forget")?.copied().unwrap_or(0);
         if input_forget != 0 {
-            return Err(OnnxOpError::UnsupportedAttribute("LSTM currently only supports input_forget == 0".to_string()))
+            return Err(OnnxOpError::UnsupportedAttribute(
+                "LSTM currently only supports input_forget == 0".to_string(),
+            ));
         }
         let activations_default = vec![
             "Sigmoid".to_string(),
             "Tanh".to_string(),
             "Tanh".to_string(),
         ];
-        let activations = node.get_attr_opt_owned::<Vec<String>>("activations")?
+        let activations = node
+            .get_attr_opt_owned::<Vec<String>>("activations")?
             .unwrap_or(activations_default.clone());
         if activations != activations_default {
-            let msg = format!("LSTM currently only supports default activations ({activations_default:?})");
-            return Err(OnnxOpError::UnsupportedAttribute(msg))
-
+            let msg = format!(
+                "LSTM currently only supports default activations ({activations_default:?})"
+            );
+            return Err(OnnxOpError::UnsupportedAttribute(msg));
         }
         // activation_alpha and activation_beta don't apply to (Sigmoid, Tanh, Tanh) so ignoring them is okay
         if node.get_attr_opt::<f32>("clip")?.is_some() {
-            return Err(OnnxOpError::UnsupportedAttribute("LSTM does not currently support clip attribute".to_string()))
+            return Err(OnnxOpError::UnsupportedAttribute(
+                "LSTM does not currently support clip attribute".to_string(),
+            ));
         }
 
         // The shape format of inputs X, initial_h and outputs Y, Y_h.
@@ -45,7 +51,9 @@ impl OnnxOp for Lstm {
         //     initial_h.shape = Y_h.shape = [batch_size, num_directions, hidden_size].
         let layout = node.get_attr_opt("layout")?.copied().unwrap_or(0);
         if layout != 0 {
-            return Err(OnnxOpError::UnsupportedAttribute("LSTM currently only supports layout == 0".to_string()));
+            return Err(OnnxOpError::UnsupportedAttribute(
+                "LSTM currently only supports layout == 0".to_string(),
+            ));
         }
 
         // The input sequences packed (and potentially padded) into one 3-D tensor
@@ -86,15 +94,16 @@ impl OnnxOp for Lstm {
         let seq_lens = match node.get_opt(4) {
             Some(n) => n,
             None => {
-                seq_lens_default =
-                    Tensor::full(seq_length as i64, (batch_size,), x.device())?;
+                seq_lens_default = Tensor::full(seq_length as i64, (batch_size,), x.device())?;
                 &seq_lens_default
             }
         };
         let seq_lens_is_default =
             (seq_lens.to_vec1::<i64>()?.iter()).all(|e| *e as usize == seq_length);
         if !seq_lens_is_default {
-            return Err(InvalidInput("LSTM currently only supports default value of seq_lens".to_string()));
+            return Err(InvalidInput(
+                "LSTM currently only supports default value of seq_lens".to_string(),
+            ));
         }
 
         // Optional initial value of the hidden. If not specified - assumed to be 0.
@@ -133,7 +142,10 @@ impl OnnxOp for Lstm {
         let p = node.get_opt(7).unwrap_or(&p_default);
         let p_is_zeros = (p.to_vec2::<f32>()?.iter()).all(|v| v.iter().all(|e| *e == 0.0));
         if !p_is_zeros {
-            return Err(InvalidInput("LSTM currently only supports default value of p (a Tensor of all zeroes)".to_string()))
+            return Err(InvalidInput(
+                "LSTM currently only supports default value of p (a Tensor of all zeroes)"
+                    .to_string(),
+            ));
         }
 
         // these all have [num_directions, ...] shapes
@@ -160,10 +172,22 @@ impl OnnxOp for Lstm {
         let rb = rb.index_select(&idx_ifco, 0)?;
         let vmap = candle_nn::VarMap::new();
         vmap.data().lock().unwrap().extend([
-            ("weight_ih_l0".to_string(), candle_core::Var::from_tensor(&w)?),
-            ("weight_hh_l0".to_string(), candle_core::Var::from_tensor(&r)?),
-            ("bias_ih_l0".to_string(), candle_core::Var::from_tensor(&wb)?),
-            ("bias_hh_l0".to_string(), candle_core::Var::from_tensor(&rb)?),
+            (
+                "weight_ih_l0".to_string(),
+                candle_core::Var::from_tensor(&w)?,
+            ),
+            (
+                "weight_hh_l0".to_string(),
+                candle_core::Var::from_tensor(&r)?,
+            ),
+            (
+                "bias_ih_l0".to_string(),
+                candle_core::Var::from_tensor(&wb)?,
+            ),
+            (
+                "bias_hh_l0".to_string(),
+                candle_core::Var::from_tensor(&rb)?,
+            ),
         ]);
         use candle_nn::rnn::RNN as _;
         let lstm = candle_nn::rnn::lstm(
@@ -188,37 +212,29 @@ impl OnnxOp for Lstm {
         }
 
         assert_eq!(num_directions, 1, "if support for bidirectional is ever added, outputs will have to be concatenated, not simply reshaped");
-        let mut values:Vec<(String, Tensor)> = Vec::new();
+        let mut values: Vec<(String, Tensor)> = Vec::new();
         if let Some(name) = node.get_output_opt(0) {
             let h_acc = h_acc.as_ref().unwrap();
             let h_acc = lstm.states_to_tensor(h_acc)?;
-            let h_acc = h_acc.reshape((
-                seq_length,
-                num_directions,
-                batch_size,
-                hidden_size as usize,
-            ))?;
+            let h_acc =
+                h_acc.reshape((seq_length, num_directions, batch_size, hidden_size as usize))?;
             values.push((name.clone(), h_acc));
         }
         if let Some(name) = node.get_output_opt(1) {
             values.push((
                 name.clone(),
-                lstm_state.h().reshape((
-                    num_directions,
-                    batch_size,
-                    hidden_size as usize,
-                ))?),
-            );
+                lstm_state
+                    .h()
+                    .reshape((num_directions, batch_size, hidden_size as usize))?,
+            ));
         }
         if let Some(name) = node.get_output_opt(2) {
             values.push((
                 name.clone(),
-                lstm_state.c().reshape((
-                    num_directions,
-                    batch_size,
-                    hidden_size as usize,
-                ))?),
-            );
+                lstm_state
+                    .c()
+                    .reshape((num_directions, batch_size, hidden_size as usize))?,
+            ));
         }
 
         Ok(OpOutput::Multiple(values))

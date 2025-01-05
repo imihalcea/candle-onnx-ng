@@ -59,9 +59,7 @@ impl<'a> ComputeNode<'a> {
     }
 
     pub fn get_output_opt(&self, index: usize) -> Option<&String> {
-        self.node_proto
-            .output
-            .get(index)
+        self.node_proto.output.get(index)
     }
 
     pub(crate) fn get_attr_opt<T: parser::Attr + ?Sized>(
@@ -94,6 +92,4 @@ impl<'a> ComputeNode<'a> {
     pub(crate) fn get_attr_definition(&self, name: &str) -> Option<&crate::onnx::AttributeProto> {
         parser::get_attr_definition(&self.node_proto, name)
     }
-
-
 }

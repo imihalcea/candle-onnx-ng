@@ -9,8 +9,8 @@ mod control;
 mod logic;
 mod math;
 mod nn;
-pub mod tensor_helper;
 mod rnn;
+pub mod tensor_helper;
 
 pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     let mut registry = OnnxOpRegistry::new();
