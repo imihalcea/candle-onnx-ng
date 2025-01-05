@@ -9,6 +9,7 @@ mod expand;
 mod flatten;
 mod gather;
 mod pad;
+mod random;
 mod range;
 mod reshape;
 mod shape;
@@ -40,5 +41,7 @@ pub(crate) fn register(registry: &mut OnnxOpRegistry) -> Result<(), OnnxOpError>
     registry.insert("ArgMin", Box::new(arg::ArgMin))?;
     registry.insert("ArgMax", Box::new(arg::ArgMax))?;
     registry.insert("Split", Box::new(split::Split))?;
+    registry.insert("RandomNormal", Box::new(random::RandomNormal))?;
+    registry.insert("RandomUniform", Box::new(random::RandomUniform))?;
     Ok(())
 }

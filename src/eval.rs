@@ -2,7 +2,7 @@ use crate::onnx::tensor_proto::DataType;
 use crate::onnx::{self, GraphProto};
 use crate::ops::{registry, ComputeNode, OpOutput};
 use candle_core as candle;
-use candle_core::{bail, DType, Device, Result, Tensor};
+use candle_core::{bail, DType, Result, Tensor};
 
 use crate::parser;
 use crate::parser::Value;
@@ -113,53 +113,6 @@ fn simple_eval_(
 
         // TODO: Validate node.input for each operator.
         match node.op_type.as_str() {
-            random_type @ ("RandomUniform" | "RandomNormal") => {
-                let dt: i64 = parser::get_attr_opt(node, "dtype")?.copied().unwrap_or(1); // 1 is float
-                                                                                          // type by
-                                                                                          // default
-                let dtype = match DataType::try_from(dt as i32) {
-                    Ok(dt) => match parser::dtype(dt) {
-                        Some(DType::U8 | DType::U32 | DType::I64) => {
-                            bail!(
-                                "unsupported 'dtype' value {dt:?}, only floats are allowed, for {random_type} {}",
-                                node.name
-                            )
-                        }
-                        Some(dt) => dt,
-                        None => {
-                            bail!(
-                                "unsupported 'dtype' value {dt:?} for {random_type} {}",
-                                node.name
-                            )
-                        }
-                    },
-                    Err(_) => {
-                        bail!(
-                            "unsupported 'dtype' value {dt:?} for {random_type} {}",
-                            node.name
-                        )
-                    }
-                };
-                let seed: Option<f32> = parser::get_attr_opt(node, "seed")?.copied();
-                if seed.is_some() {
-                    bail!("seed for {random_type} is currently not supported")
-                };
-                let shape: Vec<usize> = parser::get_attr::<[i64]>(node, "shape")?
-                    .iter()
-                    .map(|x| *x as usize)
-                    .collect();
-                let output = if random_type == "RandomUniform" {
-                    let low: f32 = parser::get_attr_opt(node, "low")?.copied().unwrap_or(0.0);
-                    let high: f32 = parser::get_attr_opt(node, "high")?.copied().unwrap_or(1.0);
-                    Tensor::rand(low, high, shape, &Device::Cpu)?.to_dtype(dtype)?
-                } else {
-                    let mean: f32 = parser::get_attr_opt(node, "mean")?.copied().unwrap_or(0.0);
-                    let scale: f32 = parser::get_attr_opt(node, "scale")?.copied().unwrap_or(1.0);
-                    Tensor::randn(mean, scale, shape, &Device::Cpu)?.to_dtype(dtype)?
-                };
-                values.insert(node.output[0].clone(), output);
-            }
-
             "LSTM" => {
                 let direction = parser::get_attr_opt(node, "direction")?.unwrap_or("forward");
                 if direction != "forward" {
