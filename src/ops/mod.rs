@@ -10,6 +10,7 @@ mod logic;
 mod math;
 mod nn;
 pub mod tensor_helper;
+mod rnn;
 
 pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     let mut registry = OnnxOpRegistry::new();
@@ -19,5 +20,6 @@ pub fn registry() -> Result<OnnxOpRegistry, OnnxOpError> {
     array::register(&mut registry)?;
     nn::register(&mut registry)?;
     control::register(&mut registry)?;
+    rnn::register(&mut registry)?;
     Ok(registry)
 }
