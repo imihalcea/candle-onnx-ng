@@ -66,18 +66,18 @@ impl<'a> ComputeNode<'a> {
         &self,
         name: &str,
     ) -> Result<Option<&T>, OnnxOpError> {
-        parser::get_attr_opt(&self.node_proto, name).map_err(OnnxOpError::from)
+        parser::get_attr_opt(self.node_proto, name).map_err(OnnxOpError::from)
     }
 
     pub(crate) fn get_attr<T: parser::Attr + ?Sized>(&self, name: &str) -> Result<&T, OnnxOpError> {
-        parser::get_attr(&self.node_proto, name).map_err(OnnxOpError::from)
+        parser::get_attr(self.node_proto, name).map_err(OnnxOpError::from)
     }
 
     pub(crate) fn get_attr_opt_owned<T: parser::AttrOwned>(
         &self,
         name: &str,
     ) -> Result<Option<T>, OnnxOpError> {
-        parser::get_attr_opt_owned(&self.node_proto, name).map_err(OnnxOpError::from)
+        parser::get_attr_opt_owned(self.node_proto, name).map_err(OnnxOpError::from)
     }
 
     pub(crate) fn get_opt(&self, i: usize) -> Option<&Tensor> {
@@ -85,11 +85,10 @@ impl<'a> ComputeNode<'a> {
             .input
             .get(i)
             .filter(|s: &&String| !s.is_empty())
-            .map(|s| self.context.get(s))
-            .flatten()
+            .and_then(|s| self.context.get(s))
     }
 
     pub(crate) fn get_attr_definition(&self, name: &str) -> Option<&crate::onnx::AttributeProto> {
-        parser::get_attr_definition(&self.node_proto, name)
+        parser::get_attr_definition(self.node_proto, name)
     }
 }

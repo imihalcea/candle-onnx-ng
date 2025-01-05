@@ -16,7 +16,7 @@ impl OnnxOp for Constant {
         let output = match value.r#type() {
             AttributeType::Tensor => {
                 let t = value.t.as_ref().unwrap();
-                parser::get_tensor(t, &node.name)?
+                parser::get_tensor(t, node.name)?
             }
             rtype => {
                 return Err(OnnxOpError::UnsupportedAttribute(format!(

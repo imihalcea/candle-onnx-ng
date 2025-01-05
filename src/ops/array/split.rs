@@ -25,11 +25,11 @@ impl OnnxOp for Split {
 
             let input_dim = input_tensor.dim(axis)?;
 
-            let mut split_sizes = vec![input_dim / num_outputs as usize; num_outputs as usize];
-            let remainder = input_dim % num_outputs as usize;
+            let mut split_sizes = vec![input_dim / num_outputs; num_outputs];
+            let remainder = input_dim % num_outputs;
             if remainder > 0 {
                 // If there's a remainder, add it to the last split size
-                split_sizes[num_outputs as usize - 1] += remainder;
+                split_sizes[num_outputs - 1] += remainder;
             }
 
             split_sizes

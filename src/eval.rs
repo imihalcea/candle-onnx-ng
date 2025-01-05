@@ -100,32 +100,31 @@ fn simple_eval_(
     // The nodes are topologically sorted so we can just process them in order.
     for node in graph.node.iter() {
         // TODO: Validate node.input for each operator.
-        match node.op_type.as_str() {
-            op_type => {
-                let onnx_op = registry.get(op_type)?;
-                let cn = ComputeNode::new(&node, values);
-                let op_output = onnx_op.eval(&cn)?;
-                match op_output {
-                    OpOutput::Single(name, value) => {
+        let op_type = node.op_type.as_str();
+        {
+            let onnx_op = registry.get(op_type)?;
+            let cn = ComputeNode::new(node, values);
+            let op_output = onnx_op.eval(&cn)?;
+            match op_output {
+                OpOutput::Single(name, value) => {
+                    values.insert(name, value);
+                }
+                OpOutput::Multiple(outputs) => {
+                    for (name, value) in outputs {
                         values.insert(name, value);
                     }
-                    OpOutput::Multiple(outputs) => {
-                        for (name, value) in outputs {
-                            values.insert(name, value);
-                        }
-                    }
-                    OpOutput::Branch(branch_name) => {
-                        let sub_graph = parser::get_attr::<GraphProto>(node, branch_name.as_str())?;
-                        let subgraph_outputs = simple_eval_(sub_graph, values)?;
-                        for (i, out) in node.output.iter().enumerate() {
-                            values.insert(
-                                out.clone(),
-                                subgraph_outputs
-                                    .get(&sub_graph.output[i].name)
-                                    .unwrap()
-                                    .clone(),
-                            );
-                        }
+                }
+                OpOutput::Branch(branch_name) => {
+                    let sub_graph = parser::get_attr::<GraphProto>(node, branch_name.as_str())?;
+                    let subgraph_outputs = simple_eval_(sub_graph, values)?;
+                    for (i, out) in node.output.iter().enumerate() {
+                        values.insert(
+                            out.clone(),
+                            subgraph_outputs
+                                .get(&sub_graph.output[i].name)
+                                .unwrap()
+                                .clone(),
+                        );
                     }
                 }
             }
