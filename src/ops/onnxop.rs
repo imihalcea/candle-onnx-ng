@@ -51,7 +51,7 @@ impl Display for OnnxOpError {
     }
 }
 
-pub trait OnnxOp {
+pub trait OnnxOp: Send + Sync{
     fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError>;
 }
 

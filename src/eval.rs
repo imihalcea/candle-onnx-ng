@@ -1,11 +1,16 @@
 use crate::onnx::tensor_proto::DataType;
 use crate::onnx::{self, GraphProto};
-use crate::ops::{registry, ComputeNode, OpOutput};
+use crate::ops::{registry, ComputeNode, OnnxOpRegistry, OpOutput};
 use candle_core::{bail, Result};
-
+use once_cell::sync::Lazy;
 use crate::parser;
 use crate::parser::Value;
 use std::collections::HashMap;
+
+static REGISTRY: Lazy<OnnxOpRegistry> = Lazy::new(|| {
+    registry().expect("failed to initialize registry")
+});
+
 
 // This function provides a direct evaluation of the proto.
 // Longer-term, we should first convert the proto to an intermediate representation of the compute
@@ -96,7 +101,7 @@ fn simple_eval_(
         }
     }
 
-    let registry = registry()?;
+    let registry = &*REGISTRY;
     // The nodes are topologically sorted so we can just process them in order.
     for node in graph.node.iter() {
         // TODO: Validate node.input for each operator.
