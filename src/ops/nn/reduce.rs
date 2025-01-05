@@ -262,3 +262,45 @@ impl OnnxOp for ReduceSum {
         Ok(OpOutput::Single(output_name.clone(), output))
     }
 }
+
+pub(crate) struct ReduceL2;
+
+impl OnnxOp for ReduceL2 {
+    //https://github.com/onnx/onnx/blob/main/docs/Operators.md#ReduceL2
+    //Version 18
+    //TODO: Does not support integer Tensor data input
+    fn eval(&self, node: &ComputeNode) -> Result<OpOutput, OnnxOpError> {
+        let input = node.get_input(0)?;
+        let axes = node.get_opt(1);
+        let keepdims = node.get_attr_opt::<i64>("keepdims")?.copied().unwrap_or(1);
+        let noop_with_empty_axes = node
+            .get_attr_opt::<i64>("noop_with_empty_axes")?
+            .copied()
+            .unwrap_or(0);
+
+        let input_sq = input.sqr()?;
+
+        let axes = match axes {
+            Some(axes) => axes
+                .to_vec1::<i64>()?
+                .into_iter()
+                .map(|x| x as usize)
+                .collect::<Vec<_>>(),
+            None => {
+                if noop_with_empty_axes == 1 {
+                    vec![]
+                } else {
+                    (0..input_sq.rank()).collect()
+                }
+            }
+        };
+
+        let output = if keepdims == 1 {
+            input_sq.sum_keepdim(axes)?.sqrt()?
+        } else {
+            input_sq.sum(axes)?.sqrt()?
+        };
+
+        Ok(OpOutput::Single(node.get_output(0)?.clone(), output))
+    }
+}
